@@ -5,13 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Telephony
-import android.telephony.SmsMessage
-import android.telephony.gsm.SmsManager
 import android.util.Log
-import android.widget.Toast
-
-
-
+import androidx.core.content.ContextCompat
 
 
 class SMSReciver : BroadcastReceiver() {
@@ -30,20 +25,26 @@ class SMSReciver : BroadcastReceiver() {
                     for (message in messages) {
 
                         Log.d(TAG, "Message Content : " + " == " + (message.getMessageBody()))
-                        Log.d(TAG, "Message Content Body : " + " == " + message.getDisplayMessageBody())
-                        Log.d(TAG, "Message recieved From" + " == " + messages[0]?.getOriginatingAddress())
+                        Log.d(
+                            TAG,
+                            "Message Content Body : " + " == " + message.getDisplayMessageBody()
+                        )
+                        Log.d(
+                            TAG,
+                            "Message recieved From" + " == " + messages[0]?.getOriginatingAddress()
+                        )
 
-                        /*val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-                        Log.d(TAG, "Number "+messages.get(0).messageBody)*/
+                        val serviceIntent = Intent(context,InternetServ::class.java)
+                        serviceIntent.putExtra("inputExtra", message.getDisplayMessageBody())
+                        InternetServ.enqueueWork(context, serviceIntent)
+
+
                     }
-                        /*if (messages.length > -1) {
-                            Log.d(TAG,"Message recieved: "," == "+ messages[0].getMessageBody());
-                            Log.d(TAG,"Message recieved From"," == "+ messages[0].getOriginatingAddress());
-                      }*/
                 }
             }
         }
     }
+}
 
 /*    if (intent.getAction() != null) {
         if (intent.getAction().equals(SMS_RECEIVED)) {
@@ -69,4 +70,3 @@ class SMSReciver : BroadcastReceiver() {
             }
         }*/
 
-}
