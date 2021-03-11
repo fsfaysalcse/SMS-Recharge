@@ -1,31 +1,40 @@
 package com.faysal.smsautomation.internet
 
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
+import com.faysal.smsautomation.Models.*
+import okhttp3.ResponseBody
+import retrofit2.Response
+import retrofit2.http.Field
+import retrofit2.http.GET
+import retrofit2.http.Query
 
-object ApiService {
-    val BASE_URL = "https://jsonplaceholder.typicode.com/"
-
-    fun getApiService () : ApiInterface {
-
-        val logging = HttpLoggingInterceptor()
-        logging.level = HttpLoggingInterceptor.Level.HEADERS
-
-        val okHttpClient = OkHttpClient.Builder()
-            .readTimeout(30, TimeUnit.MINUTES)
-            .writeTimeout(30, TimeUnit.MINUTES)
-            .connectTimeout(30, TimeUnit.MINUTES)
-            .addInterceptor(logging)
-            .build()
+interface ApiService {
 
 
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .client(okHttpClient)
-            .build().create(ApiInterface::class.java)
-    }
+    @GET("api-getoperatorservice")
+    suspend fun getServices(
+        @Query("list") list : String = "all"
+    ) : Response<Service>
+
+
+    @GET("api/interval")
+    suspend fun getInterval(
+        @Query("type") type : String = "sms"
+    ) : Response<Interval>
+
+
+    @GET("api-getdomain")
+    suspend fun getDomainInfo(
+        @Query("domain") domain : String
+    ) : Response<Domain>
+
+    @GET("smsReceive")
+    suspend fun getVerificationCodeInfo(
+        @Query("verificationCode") verificationCode : String
+    ) : Response<Verification>
+
+
+
+    @GET("api/companyInfo")
+    suspend fun getCompanyInfo() : Response<Company>
+
 }

@@ -2,18 +2,18 @@ package com.faysal.smsautomation.services
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.core.app.JobIntentService
-import com.faysal.smsautomation.internet.ApiInterface
 import com.faysal.smsautomation.internet.ApiService
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import com.faysal.smsautomation.internet.NetworkBuilder
+import me.everything.providers.android.telephony.Sms
+import me.everything.providers.android.telephony.TelephonyProvider
+
 
 class InternetServ : JobIntentService() {
 
-    lateinit var service :  ApiInterface
+    lateinit var service :  ApiService
 
     companion object{
         val TAG = "InternetServ";
@@ -24,7 +24,7 @@ class InternetServ : JobIntentService() {
 
     override fun onCreate() {
         super.onCreate()
-        service = ApiService.getApiService();
+        service = NetworkBuilder.getApiService();
     }
 
 
@@ -36,14 +36,20 @@ class InternetServ : JobIntentService() {
     }
 
     private fun serverOperation() {
-        runBlocking  {
+
+        val telephonyProvider = TelephonyProvider(applicationContext)
+        val smses: List<Sms> = telephonyProvider.getSms(TelephonyProvider.Filter.ALL).getList()
+
+
+
+        /*runBlocking  {
             try {
                 val response = async { service.getAllPost() }.await()
                 if (response.isSuccessful){
                     Log.d(TAG, "serverOperation: Success ")
-                    /*for (post  in response.body()!!){
+                    *//*for (post  in response.body()!!){
                         Log.d(TAG, "serverOperation: "+post.title)
-                    }*/
+                    }*//*
 
                 }else{
                     Log.d(TAG, "serverOperation: Failed")
@@ -52,7 +58,19 @@ class InternetServ : JobIntentService() {
                 Log.d(TAG, "serverOperation: Error "+e.message)
             }
 
+        }*/
+    }
+
+    fun deleteSms(smsId: Long, thread_id: Int): Boolean {
+        var isSmsDeleted = false
+        isSmsDeleted = try {
+            val thread = Uri.parse("content://sms")
+            contentResolver.delete(thread, "thread_id=? and _id=?", arrayOf(java.lang.String.valueOf(thread_id), java.lang.String.valueOf(smsId)))
+            true
+        } catch (ex: Exception) {
+            false
         }
+        return isSmsDeleted
     }
 
     override fun onDestroy() {
