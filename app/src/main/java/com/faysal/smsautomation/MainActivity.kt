@@ -16,18 +16,17 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.faysal.smsautomation.Models.Company
 import com.faysal.smsautomation.Models.Interval
+import com.faysal.smsautomation.Models.Notice
 import com.faysal.smsautomation.Models.Service
-import com.faysal.smsautomation.Util.isEmailValid
-import com.faysal.smsautomation.Util.isUrlValid
 import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
 import com.google.android.material.snackbar.Snackbar
 import dmax.dialog.SpotsDialog
 import kotlinx.coroutines.*
-import okhttp3.ResponseBody
 import retrofit2.Response
 
 
@@ -73,6 +72,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveOperation() {
+        if (Util.isOnline(this)==false){
+            showErrorMessageOKCancel("Internet connection failed ! ")
+            return
+        }
+
+        val loading: AlertDialog = SpotsDialog.Builder().setContext(this).setCancelable(false).build()
 
         val domainName = binding.etDomainName.text.toString().trim()
         val verificationCode = binding.etVerificationCode.text.toString().trim()
@@ -80,103 +85,136 @@ class MainActivity : AppCompatActivity() {
         var domStatus = false
         var vCodeStatus = false
 
-        if (domainName.isNullOrEmpty()){
-            Util.showAlertMessage(binding.root,"Please enter domain name to save and start service.")
+        if (domainName.isNullOrEmpty()) {
+            Util.showAlertMessage(
+                binding.root,
+                "Please enter domain name to save and start service."
+            )
             return
         }
 
-        if (verificationCode.isNullOrEmpty()){
-            Util.showAlertMessage(binding.root,"Please enter verification code.")
+        if (verificationCode.isNullOrEmpty()) {
+            Util.showAlertMessage(binding.root, "Please enter verification code.")
             return
         }
+
 
         runBlocking {
-            try {
-                val response = async { api2Service.getDomainInfo(domainName) }.await()
-                if (response.isSuccessful) {
-                    Log.d(TAG, "saveOperation: "+response.body())
-                    if (response.body()?.status == "1") {
-                        domStatus = true
-                    }
-                }
+            supervisorScope {
+                try {
+                    val responseDomain = async { api2Service.getDomainInfo(domainName) }.await()
+                    val responseVerificationCode =
+                        async { apiService.getVerificationCodeInfo(verificationCode) }.await()
 
-            }catch (t : Throwable){domStatus = false}
+                    if (responseDomain.isSuccessful) {
+                        if (responseDomain.body()?.status == "1") {
+                            domStatus = true
+                        }
+                    }
+
+                    if (responseVerificationCode.isSuccessful) {
+                        if (responseVerificationCode.body()?.status == 1) {
+                            vCodeStatus = true
+                        }
+                    }
+
+                } catch (t: Throwable) {
+                    domStatus = false
+
+                }
+            }
+
         }
 
-        if (domStatus==false){
-            Util.showAlertMessage(binding.root,"This domain not exist in Database.")
+
+        if (domStatus == false) {
+            showErrorMessageOKCancel("This domain not exist in Database.")
+            // Util.showAlertMessage(binding.root,"This domain not exist in Database.")
             return
         }
 
-        runBlocking {
-            try {
-                val response = async { apiService.getVerificationCodeInfo(verificationCode) }.await()
-                if (response.isSuccessful) {
-                    Log.d(TAG, "saveOperation: "+response.body())
-                    if (response.body()?.status == 1) {
-                        vCodeStatus = true
-                    }
-                }
 
-            }catch (t : Throwable){vCodeStatus = false}
-        }
-
-        if (vCodeStatus==false){
-            Util.showAlertMessage(binding.root,"Verification code invalid .")
+        if (vCodeStatus == false) {
+            showErrorMessageOKCancel("Verification code invalid .")
             return
         }
 
 
 
-      /*  if (!domainName.isUrlValid()){
-            Util.showAlertMessage(binding.root,"Invalid domain name.")
-        }*/
+
+
+        /*  if (!domainName.isUrlValid()){
+              Util.showAlertMessage(binding.root,"Invalid domain name.")
+          }*/
 
 
     }
 
+
     private fun setUpNetworkViews() {
+        if (Util.isOnline(this)==false){
+            showErrorMessageOKCancel("Internet connection failed ! ")
+            return
+        }
+
+        var dialog: AlertDialog =
+            SpotsDialog.Builder().setContext(this).setCancelable(false).build()
+        dialog.show()
+
+        lifecycleScope.launchWhenStarted {
+            supervisorScope {
+                try {
+                    var intervalResponse = async { apiService.getInterval() }.await()
+                    var companyResponse = async { apiService.getCompanyInfo() }.await()
+                    var serviceResponse = async { api2Service.getServices() }.await()
+                    var noticeResponse = async { api2Service.getNotice() }.await()
 
 
-        GlobalScope.launch {
-
-            try {
-                var intervalResponse = async { apiService.getInterval() }.await()
-                var companyResponse = async { apiService.getCompanyInfo() }.await()
-                var serviceResponse = async { api2Service.getServices() }.await()
-
-
-                withContext(Dispatchers.Main){
-                    setupIntervalViews(intervalResponse)
-                    setupCompanyInfoViews(companyResponse)
-                    setupServiceViews(serviceResponse)
-                }
+                    withContext(Dispatchers.Main) {
+                        setupIntervalViews(intervalResponse)
+                        setupCompanyInfoViews(companyResponse)
+                        setupServiceViews(serviceResponse)
+                        setupNoticeViews(noticeResponse)
+                        dialog.dismiss()
+                    }
 
 
-            } catch (e: Throwable) {
-                withContext(Dispatchers.Main) {
-                    Snackbar.make(binding.root, e.message.toString(), Snackbar.LENGTH_LONG).show()
+                } catch (e: Throwable) {
+                    withContext(Dispatchers.Main) {
+                        Snackbar.make(binding.root, e.message.toString(), Snackbar.LENGTH_LONG)
+                            .show()
+                        dialog.dismiss()
+                    }
                 }
             }
         }
     }
 
+    private fun setupNoticeViews(response: Response<Notice>) {
+        if (response.isSuccessful) {
+            var notice = response.body()?.Response
+            if (!notice.isNullOrEmpty()) binding.tvNotice.text = notice
+        }
+    }
+
     private fun setupServiceViews(response: Response<Service>) {
-        if (response.isSuccessful){
+        if (response.isSuccessful) {
             var service = response.body()?.get(0)?.service
             if (!service.isNullOrEmpty()) binding.tvService.text = service
         }
     }
 
     private fun setupCompanyInfoViews(response: Response<Company>) {
-        if (response.isSuccessful){
+        if (response.isSuccessful) {
             var company_name = response.body()?.company_name
+            var version_name = response.body()?.version
             if (!company_name.isNullOrEmpty()) binding.tvComapnyName.text = company_name
+            if (!version_name.isNullOrEmpty()) binding.tvVersionCode.text = version_name
         }
     }
 
-    private fun setupIntervalViews(response : Response<Interval>) {
-        if (response.isSuccessful){
+    private fun setupIntervalViews(response: Response<Interval>) {
+        if (response.isSuccessful) {
             var interval = response.body()?.second
             if (!interval.isNullOrEmpty()) binding.tvInterval.text = interval
         }
@@ -286,6 +324,14 @@ class MainActivity : AppCompatActivity() {
             .setMessage(message)
             .setPositiveButton("OK", okListener)
             .setNegativeButton("Cancel", null)
+            .create()
+            .show()
+    }
+
+    private fun showErrorMessageOKCancel(message: String) {
+        AlertDialog.Builder(this@MainActivity)
+            .setMessage(message)
+            .setPositiveButton("OK", null)
             .create()
             .show()
     }

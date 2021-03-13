@@ -27,6 +27,11 @@ interface ApiService {
         @Query("domain") domain : String
     ) : Response<Domain>
 
+    @GET("api-getnotice")
+    suspend fun getNotice(
+        @Query("show") show : String = "recharge"
+    ) : Response<Notice>
+
     @GET("smsReceive")
     suspend fun getVerificationCodeInfo(
         @Query("verificationCode") verificationCode : String
