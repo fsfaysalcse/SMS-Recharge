@@ -3,10 +3,10 @@ package com.faysal.smsautomation
 import android.Manifest
 import android.Manifest.permission.*
 import android.app.AlertDialog
-import android.app.ProgressDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.telephony.SubscriptionInfo
@@ -24,9 +24,13 @@ import com.faysal.smsautomation.Models.Service
 import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
+import com.faysal.smsautomation.util.Constants
+import com.faysal.smsautomation.util.SharedPref
 import com.google.android.material.snackbar.Snackbar
 import dmax.dialog.SpotsDialog
 import kotlinx.coroutines.*
+import me.everything.providers.android.telephony.Sms
+import me.everything.providers.android.telephony.TelephonyProvider
 import retrofit2.Response
 
 
@@ -42,15 +46,62 @@ class MainActivity : AppCompatActivity() {
     lateinit var apiService: ApiService
     lateinit var api2Service: ApiService
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        initDependency()
-        providePermission()
-        setUpViewsWithData()
+       // initDependency()
+       // providePermission()
+      //  setUpViewsWithData()
+
+        smsOperation()
 
 
+    }
+
+    private fun smsOperation(){
+        val telephonyProvider = TelephonyProvider(applicationContext)
+        val smses: List<Sms> = telephonyProvider.getSms(TelephonyProvider.Filter.ALL).getList()
+
+        Log.d(TAG, "smsOperation: " + smses.size)
+        deleteSMS()
+
+        for (sms in smses){
+           // Log.d(TAG, "smsOperation: "+sms.address +" ")
+           // deleteSms(sms.id, sms.threadId)
+        }
+
+    }
+
+    fun deleteSms(smsId: Long, thread_id: Int): Boolean {
+        var isSmsDeleted = false
+        isSmsDeleted = try {
+            val thread = Uri.parse("content://sms")
+            contentResolver.delete(
+                thread, "thread_id=? and _id=?", arrayOf(
+                    java.lang.String.valueOf(
+                        thread_id
+                    ), java.lang.String.valueOf(smsId)
+                )
+            )
+            true
+        } catch (ex: Exception) {
+            false
+        }
+        return isSmsDeleted
+    }
+
+    private fun deleteSMS(): Boolean {
+        var isDeleted = false
+        isDeleted = try {
+            contentResolver.delete(Uri.parse("content://sms/"), null, null)
+            true
+        } catch (ex: java.lang.Exception) {
+            false
+        }
+        return isDeleted
     }
 
     private fun initDependency() {
@@ -65,6 +116,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+
     private fun setUpForButtonClickHandeler() {
         binding.btnSave.setOnClickListener {
             saveOperation()
@@ -72,7 +124,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveOperation() {
-        if (Util.isOnline(this)==false){
+        if (!Util.isOnline(this)){
             showErrorMessageOKCancel("Internet connection failed ! ")
             return
         }
@@ -81,6 +133,8 @@ class MainActivity : AppCompatActivity() {
 
         val domainName = binding.etDomainName.text.toString().trim()
         val verificationCode = binding.etVerificationCode.text.toString().trim()
+        val service = binding.tvService.text.toString().trim()
+        val interval = binding.tvInterval.text.toString().trim()
 
         var domStatus = false
         var vCodeStatus = false
@@ -95,6 +149,19 @@ class MainActivity : AppCompatActivity() {
 
         if (verificationCode.isNullOrEmpty()) {
             Util.showAlertMessage(binding.root, "Please enter verification code.")
+            return
+        }
+
+        if (service.isNullOrEmpty()) {
+            Util.showAlertMessage(
+                binding.root,
+                "Invalid service amount"
+            )
+            return
+        }
+
+        if (interval.isNullOrEmpty()) {
+            Util.showAlertMessage(binding.root, "Invalid interval amount")
             return
         }
 
@@ -140,8 +207,15 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+        SharedPref.putString(this, Constants.SHARED_DOMAIN_NAME, domainName)
+        SharedPref.putString(this, Constants.SHARED_INTERVAL, interval)
+        SharedPref.putString(this, Constants.SHARED_SERVICE, service)
+        SharedPref.putBoolean(this, Constants.SHARED_SIM_1_ACTIVE, true)
+        SharedPref.putBoolean(this, Constants.SHARED_SIM_2_ACTIVE, true)
+        SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
 
 
+        Util.showAlertMessage(binding.root, "Background service started successfully >>")
 
         /*  if (!domainName.isUrlValid()){
               Util.showAlertMessage(binding.root,"Invalid domain name.")
@@ -158,7 +232,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         var dialog: AlertDialog =
-            SpotsDialog.Builder().setContext(this).setCancelable(false).build()
+            SpotsDialog.Builder().setContext(this).setMessage("PLEASE WAIT").setCancelable(false).build()
         dialog.show()
 
         lifecycleScope.launchWhenStarted {

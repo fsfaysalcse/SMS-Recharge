@@ -127,6 +127,7 @@
                         android:layout_marginLeft="3dp"
                         android:layout_marginRight="3dp"
                         android:layout_weight="2.5"
+                        android:backgroundTint="@color/green_dark"
                         android:background="@drawable/savebtn_bg"
                         android:fontFamily="@font/montserrat_regular"
                         android:gravity="center"
@@ -181,7 +182,8 @@
                         android:layout_gravity="right"
                         android:layout_marginLeft="10dp"
                         android:layout_weight="2"
-                        android:gravity="center" />
+                        android:gravity="center"
+                        android:checked="true"/>
 
                     <View
                         android:layout_width="0dp"
@@ -220,7 +222,8 @@
                         android:layout_gravity="right"
                         android:layout_marginLeft="10dp"
                         android:layout_weight="2"
-                        android:gravity="center" />
+                        android:gravity="center"
+                        android:checked="true" />
 
                     <View
                         android:layout_width="0dp"
