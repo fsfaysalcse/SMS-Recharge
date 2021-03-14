@@ -6,10 +6,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Telephony
 import android.util.Log
-import com.faysal.smsautomation.DatabaseBuilder
 import com.faysal.smsautomation.database.PhoneSms
-import com.faysal.smsautomation.database.SmsDao
-import com.faysal.smsautomation.database.viewmodels.RoomDBViewModel
+import com.faysal.smsautomation.database.PhoneSmsDao
+import com.faysal.smsautomation.database.SmsDatabase
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.lang.Exception
@@ -19,14 +18,13 @@ class SMSReciver : BroadcastReceiver() {
 
     private val SMS_RECEIVED: String = "android.provider.Telephony.SMS_RECEIVED"
     private val TAG = "SMSBroadcastReceiver"
-    lateinit var viewModel : RoomDBViewModel
-    lateinit var smsDao : SmsDao
+    lateinit var smsDao : PhoneSmsDao
 
 
 
     override fun onReceive(context: Context, intent: Intent) {
-        val database = DatabaseBuilder.getInstance(context)
-        smsDao = database.smsDao()
+        val database = SmsDatabase.getInstance(context)
+        smsDao = database.phoneSmsDao()
 
         var inSIM = false
 
@@ -59,20 +57,9 @@ class SMSReciver : BroadcastReceiver() {
 
 
 
-
-                        GlobalScope.launch {
-                            try {
-                                val list = smsDao.getAll()
-                                Log.d(TAG, "onReceive: "+list.size)
-                            }catch (e : Exception){
-                                e.printStackTrace()
-                            }
-                        }
-
-
-                        /*  val serviceIntent = Intent(context,InternetServ::class.java)
+                          val serviceIntent = Intent(context,InternetServ::class.java)
                           serviceIntent.putExtra("inputExtra", message.getDisplayMessageBody())
-                          InternetServ.enqueueWork(context, serviceIntent)*/
+                          InternetServ.enqueueWork(context, serviceIntent)
 
 
                     }

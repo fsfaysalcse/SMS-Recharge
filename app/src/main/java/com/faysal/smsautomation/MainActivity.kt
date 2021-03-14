@@ -53,10 +53,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
-        //initDependency()
-       // providePermission()
-      //  setUpViewsWithData()
+        initDependency()
+        providePermission()
+        setUpViewsWithData()
 
         //sendSMS("123423532","Hello World")
 

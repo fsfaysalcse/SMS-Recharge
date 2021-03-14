@@ -12,6 +12,6 @@ data class PhoneSms(
     @ColumnInfo(name = "receiver_phone") val receiver_phone: String?,
     @ColumnInfo(name = "body") val body : String?,
     @ColumnInfo(name = "thread_id") val thread_id : String?,
-    @ColumnInfo(name = "timestamp") val timestamp: String?,
+    @ColumnInfo(name = "timestamp") val timestamp: String?
 
 )
