@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.faysal.smsautomation.database.AppDatabase
 
 
 class App : Application() {
@@ -13,6 +14,7 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        DatabaseBuilder.getInstance(this);
         createNotificationChannel()
     }
 

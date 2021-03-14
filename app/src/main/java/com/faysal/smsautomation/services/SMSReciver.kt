@@ -6,15 +6,28 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Telephony
 import android.util.Log
-import androidx.core.content.ContextCompat
+import com.faysal.smsautomation.DatabaseBuilder
+import com.faysal.smsautomation.database.PhoneSms
+import com.faysal.smsautomation.database.SmsDao
+import com.faysal.smsautomation.database.viewmodels.RoomDBViewModel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.lang.Exception
 
 
 class SMSReciver : BroadcastReceiver() {
 
     private val SMS_RECEIVED: String = "android.provider.Telephony.SMS_RECEIVED"
     private val TAG = "SMSBroadcastReceiver"
+    lateinit var viewModel : RoomDBViewModel
+    lateinit var smsDao : SmsDao
+
+
 
     override fun onReceive(context: Context, intent: Intent) {
+        val database = DatabaseBuilder.getInstance(context)
+        smsDao = database.smsDao()
+
         var inSIM = false
 
         if (intent.getAction() != null) {
@@ -34,13 +47,47 @@ class SMSReciver : BroadcastReceiver() {
                             "Message recieved From" + " == " + messages[0]?.getOriginatingAddress()
                         )
 
-                        val serviceIntent = Intent(context,InternetServ::class.java)
-                        serviceIntent.putExtra("inputExtra", message.getDisplayMessageBody())
-                        InternetServ.enqueueWork(context, serviceIntent)
+
+                        insertSms(
+                            PhoneSms(
+                            sender_phone = message.originatingAddress,
+                                receiver_phone = "3453454",
+                                body = message.displayMessageBody,
+                                thread_id = "34543",
+                                timestamp = message.timestampMillis.toString()
+                        ))
+
+
+
+
+                        GlobalScope.launch {
+                            try {
+                                val list = smsDao.getAll()
+                                Log.d(TAG, "onReceive: "+list.size)
+                            }catch (e : Exception){
+                                e.printStackTrace()
+                            }
+                        }
+
+
+                        /*  val serviceIntent = Intent(context,InternetServ::class.java)
+                          serviceIntent.putExtra("inputExtra", message.getDisplayMessageBody())
+                          InternetServ.enqueueWork(context, serviceIntent)*/
 
 
                     }
                 }
+            }
+        }
+    }
+
+    fun insertSms(sms: PhoneSms){
+        GlobalScope.launch {
+            try {
+                smsDao.insert(sms)
+                Log.d(TAG, "SMS added successfully")
+            }catch (e : Exception){
+                Log.d(TAG, "Failed to insert data into room")
             }
         }
     }

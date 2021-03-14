@@ -9,10 +9,12 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -29,8 +31,6 @@ import com.faysal.smsautomation.util.SharedPref
 import com.google.android.material.snackbar.Snackbar
 import dmax.dialog.SpotsDialog
 import kotlinx.coroutines.*
-import me.everything.providers.android.telephony.Sms
-import me.everything.providers.android.telephony.TelephonyProvider
 import retrofit2.Response
 
 
@@ -52,45 +52,31 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-       // initDependency()
+
+
+        //initDependency()
        // providePermission()
       //  setUpViewsWithData()
 
-        smsOperation()
-
-
-    }
-
-    private fun smsOperation(){
-        val telephonyProvider = TelephonyProvider(applicationContext)
-        val smses: List<Sms> = telephonyProvider.getSms(TelephonyProvider.Filter.ALL).getList()
-
-        Log.d(TAG, "smsOperation: " + smses.size)
-        deleteSMS()
-
-        for (sms in smses){
-           // Log.d(TAG, "smsOperation: "+sms.address +" ")
-           // deleteSms(sms.id, sms.threadId)
-        }
+        //sendSMS("123423532","Hello World")
 
     }
 
-    fun deleteSms(smsId: Long, thread_id: Int): Boolean {
-        var isSmsDeleted = false
-        isSmsDeleted = try {
-            val thread = Uri.parse("content://sms")
-            contentResolver.delete(
-                thread, "thread_id=? and _id=?", arrayOf(
-                    java.lang.String.valueOf(
-                        thread_id
-                    ), java.lang.String.valueOf(smsId)
-                )
-            )
-            true
+    fun sendSMS(phoneNo: String, msg: String) {
+        try {
+            val smsManager: SmsManager = SmsManager.getDefault()
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null)
+            Toast.makeText(
+                applicationContext, "Message Sent",
+                Toast.LENGTH_LONG
+            ).show()
         } catch (ex: Exception) {
-            false
+            Toast.makeText(
+                applicationContext, ex.message.toString(),
+                Toast.LENGTH_LONG
+            ).show()
+            ex.printStackTrace()
         }
-        return isSmsDeleted
     }
 
     private fun deleteSMS(): Boolean {
@@ -408,6 +394,11 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("OK", null)
             .create()
             .show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
     }
 
 
