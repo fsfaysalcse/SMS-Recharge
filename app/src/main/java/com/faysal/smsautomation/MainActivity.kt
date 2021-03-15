@@ -106,6 +106,12 @@ class MainActivity : AppCompatActivity() {
         binding.btnSave.setOnClickListener {
             saveOperation()
         }
+
+        binding.btnReset.setOnClickListener {
+
+            SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, false)
+            Util.showAlertMessage(binding.root, "Background Service has been stopped ")
+        }
     }
 
     private fun saveOperation() {
@@ -195,6 +201,7 @@ class MainActivity : AppCompatActivity() {
         SharedPref.putString(this, Constants.SHARED_DOMAIN_NAME, domainName)
         SharedPref.putString(this, Constants.SHARED_INTERVAL, interval)
         SharedPref.putString(this, Constants.SHARED_SERVICE, service)
+        SharedPref.putString(this, Constants.SHARED_VERIFICATION_CODE, verificationCode)
         SharedPref.putBoolean(this, Constants.SHARED_SIM_1_ACTIVE, true)
         SharedPref.putBoolean(this, Constants.SHARED_SIM_2_ACTIVE, true)
         SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)

@@ -47,8 +47,9 @@
 
         <service android:name=".services.ServerService" />
         <service
-            android:name=".services.InternetServ"
+            android:name=".services.InternetService"
             android:permission="android.permission.BIND_JOB_SERVICE" /> <!-- Activity that allows the user to send new SMS/MMS messages -->
+
 
     </application>
 

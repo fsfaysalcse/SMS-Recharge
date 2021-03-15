@@ -61,6 +61,7 @@
                         android:background="@drawable/edittext_bg"
                         android:fontFamily="@font/montserrat_regular"
                         android:gravity="center"
+                        android:inputType="textPassword"
                         android:hint="V.Code"
                         android:text="100"
                         android:maxLines="1"

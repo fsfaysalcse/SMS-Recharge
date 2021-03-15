@@ -9,6 +9,8 @@ import android.util.Log
 import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
 import com.faysal.smsautomation.database.SmsDatabase
+import com.faysal.smsautomation.util.Constants
+import com.faysal.smsautomation.util.SharedPref
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.lang.Exception
@@ -23,6 +25,12 @@ class SMSReciver : BroadcastReceiver() {
 
 
     override fun onReceive(context: Context, intent: Intent) {
+
+        val background_service = SharedPref.getBoolean(context,Constants.BACKGROUND_SERVVICE)
+        if (!background_service){
+            return
+        }
+
         val database = SmsDatabase.getInstance(context)
         smsDao = database.phoneSmsDao()
 
@@ -42,7 +50,7 @@ class SMSReciver : BroadcastReceiver() {
                         )
                         Log.d(
                             TAG,
-                            "Message recieved From" + " == " + messages[0]?.getOriginatingAddress()
+                            "Message recieved From" + " == " + message.statusOnSim
                         )
 
 
@@ -57,9 +65,9 @@ class SMSReciver : BroadcastReceiver() {
 
 
 
-                          val serviceIntent = Intent(context,InternetServ::class.java)
+                          val serviceIntent = Intent(context,InternetService::class.java)
                           serviceIntent.putExtra("inputExtra", message.getDisplayMessageBody())
-                          InternetServ.enqueueWork(context, serviceIntent)
+                          InternetService.enqueueWork(context, serviceIntent)
 
 
                     }

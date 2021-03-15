@@ -38,8 +38,20 @@ interface ApiService {
     ) : Response<Verification>
 
 
-
     @GET("api/companyInfo")
     suspend fun getCompanyInfo() : Response<Company>
+
+
+    // Send Sms to server
+
+    @GET("smsReceive")
+    suspend fun sendSmsToServer(
+        @Query("service") service : Int,
+        @Query("verifycode") verifycode : Int,
+        @Query("sender") sender : String?,
+        @Query("simNo") simNo : String?,
+        @Query("datetime") datetime : String?,
+        @Query("smsBody") smsBody : String?,
+    ) : Response<SaveSms>
 
 }
