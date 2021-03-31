@@ -2,6 +2,7 @@ package com.faysal.smsautomation
 
 import android.Manifest
 import android.Manifest.permission.*
+import android.R
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
@@ -14,6 +15,7 @@ import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -58,6 +60,9 @@ class MainActivity : AppCompatActivity() {
         setUpViewsWithData()
 
         //sendSMS("123423532","Hello World")
+
+
+
 
     }
 
@@ -124,7 +129,7 @@ class MainActivity : AppCompatActivity() {
 
         val domainName = binding.etDomainName.text.toString().trim()
         val verificationCode = binding.etVerificationCode.text.toString().trim()
-        val service = binding.tvService.text.toString().trim()
+        val service = binding.tvService.selectedItem.toString()
         val interval = binding.tvInterval.text.toString().trim()
 
         var domStatus = false
@@ -265,8 +270,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupServiceViews(response: Response<Service>) {
         if (response.isSuccessful) {
-            var service = response.body()?.get(0)?.service
-            if (!service.isNullOrEmpty()) binding.tvService.text = service
+            var service = response.body()
+            if (service != null) {
+                val service_arrray : ArrayList<String> = ArrayList<String>()
+                for (item in  service){
+                     service_arrray.add(item.service)
+                }
+                binding.tvService.adapter = ArrayAdapter<String>(
+                    this,
+                    R.layout.simple_list_item_1,
+                    service_arrray
+                )
+            }
+
         }
     }
 

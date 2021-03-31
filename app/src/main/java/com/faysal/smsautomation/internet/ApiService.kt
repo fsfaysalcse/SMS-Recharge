@@ -2,12 +2,14 @@ package com.faysal.smsautomation.internet
 
 import com.faysal.smsautomation.Models.*
 import okhttp3.ResponseBody
+import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface ApiService {
+
 
 
     @GET("api-getoperatorservice")
@@ -38,13 +40,22 @@ interface ApiService {
     ) : Response<Verification>
 
 
+
     @GET("api/companyInfo")
     suspend fun getCompanyInfo() : Response<Company>
 
 
+
+    @GET("/smsApi/pendingSms")
+    suspend fun getOutgoingMessages(
+        @Query("verifycode") verifycode : Int
+    ) : Response<OutgoingMessages>
+
+
+
     // Send Sms to server
 
-    @GET("smsReceive")
+    @GET("smsApi/smsReceive")
     suspend fun sendSmsToServer(
         @Query("service") service : Int,
         @Query("verifycode") verifycode : Int,
@@ -53,5 +64,8 @@ interface ApiService {
         @Query("datetime") datetime : String?,
         @Query("smsBody") smsBody : String?,
     ) : Response<SaveSms>
+
+
+
 
 }
