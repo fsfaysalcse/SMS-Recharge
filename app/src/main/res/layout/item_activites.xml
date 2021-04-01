@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=" ☑ SMS has been send to this number 334534534"
+        android:fontFamily="@font/montserrat_regular"
+        android:textColor="@color/dark_grey"/>
+
+    <TextView
+        android:id="@+id/guid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=" - GUID : 345345"
+        android:fontFamily="@font/montserrat_regular"
+        android:textColor="@color/teal_200"
+        android:layout_marginTop="10dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/fromSim"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="SIM 1"
+            android:layout_gravity="center"
+            android:gravity="left"
+            android:fontFamily="@font/montserrat_regular"
+            android:textColor="@color/dark_grey"/>
+        <TextView
+            android:id="@+id/result"
+            android:layout_weight="1.5"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="FROM SIM 1"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:fontFamily="@font/montserrat_regular"
+            android:textColor="@color/dark_grey"/>
+        <TextView
+            android:id="@+id/timestamp"
+            android:layout_weight="1.5"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="10-04-2020"
+            android:layout_gravity="center"
+            android:gravity="right"
+            android:fontFamily="@font/montserrat_regular"
+            android:textColor="@color/dark_grey"/>
+
+
+    </LinearLayout>
+
+</LinearLayout>

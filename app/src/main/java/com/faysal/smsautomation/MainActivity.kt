@@ -20,11 +20,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.lifecycleScope
 import com.faysal.smsautomation.Models.Company
 import com.faysal.smsautomation.Models.Interval
 import com.faysal.smsautomation.Models.Notice
 import com.faysal.smsautomation.Models.Service
+import com.faysal.smsautomation.viewmodel.SMSViewModel
 import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
@@ -42,11 +45,14 @@ class MainActivity : AppCompatActivity() {
         val TAG = "MainActivity"
     }
 
+    private var isAbaleToStartService: Boolean = false
     private val PERMISSION_REQUEST_CODE = 200
     lateinit var binding: ActivityMainBinding
     private var isPermissionGranted = false
     lateinit var apiService: ApiService
     lateinit var api2Service: ApiService
+
+    lateinit var smsViewModel: SMSViewModel
 
 
 
@@ -97,13 +103,23 @@ class MainActivity : AppCompatActivity() {
     private fun initDependency() {
         apiService = NetworkBuilder.getApiService()
         api2Service = NetworkBuilder.getAnotherApiService()
+        smsViewModel = ViewModelProviders.of(this).get(SMSViewModel::class.java)
     }
 
     private fun setUpViewsWithData() {
         setupSimInfo()
         setUpNetworkViews()
         setUpForButtonClickHandeler()
+        setUpForLastsActivites()
 
+    }
+
+    private fun setUpForLastsActivites() {
+        smsViewModel.alldeliverdSms.observe(this, Observer {
+            for (s in it) {
+                Log.d(TAG, "setUpForLastsActivites: "+s.body)
+            }
+        })
     }
 
 
@@ -117,6 +133,17 @@ class MainActivity : AppCompatActivity() {
             SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, false)
             Util.showAlertMessage(binding.root, "Background Service has been stopped ")
         }
+
+        binding.btnStart.setOnClickListener {
+
+            if (isAbaleToStartService){
+                Util.showAlertMessage(binding.root, "Background service started successfully >>")
+                SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
+            }else{
+                showErrorMessageOKCancel("Press the save button before start background service")
+            }
+
+        }
     }
 
     private fun saveOperation() {
@@ -129,7 +156,7 @@ class MainActivity : AppCompatActivity() {
 
         val domainName = binding.etDomainName.text.toString().trim()
         val verificationCode = binding.etVerificationCode.text.toString().trim()
-        val service = binding.tvService.selectedItem.toString()
+        val service = binding.tvService.selectedItem?.toString()
         val interval = binding.tvInterval.text.toString().trim()
 
         var domStatus = false
@@ -209,10 +236,14 @@ class MainActivity : AppCompatActivity() {
         SharedPref.putString(this, Constants.SHARED_VERIFICATION_CODE, verificationCode)
         SharedPref.putBoolean(this, Constants.SHARED_SIM_1_ACTIVE, true)
         SharedPref.putBoolean(this, Constants.SHARED_SIM_2_ACTIVE, true)
-        SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
 
 
-        Util.showAlertMessage(binding.root, "Background service started successfully >>")
+        isAbaleToStartService = true
+
+        Util.showAlertMessage(binding.root, "All the form information saved successfully")
+
+
+
 
         /*  if (!domainName.isUrlValid()){
               Util.showAlertMessage(binding.root,"Invalid domain name.")

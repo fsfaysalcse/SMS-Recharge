@@ -112,10 +112,24 @@
                     android:layout_marginTop="10dp"
                     android:orientation="horizontal">
 
-                    <View
+
+
+                    <Button
+                        android:id="@+id/btn_start"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
-                        android:layout_weight="5" />
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="3dp"
+                        android:layout_marginRight="3dp"
+                        android:layout_weight="5"
+                        android:backgroundTint="#FB8C00"
+                        android:background="@drawable/savebtn_bg"
+                        android:fontFamily="@font/montserrat_regular"
+                        android:gravity="center"
+                        android:padding="5dp"
+                        android:text="Start"
+                        android:textAllCaps="true"
+                        android:textColor="@color/white" />
 
                     <Button
                         android:id="@+id/btn_save"
@@ -130,8 +144,8 @@
                         android:fontFamily="@font/montserrat_regular"
                         android:gravity="center"
                         android:padding="5dp"
-                        android:text="Start"
-                        android:textAllCaps="false"
+                        android:text="Save"
+                        android:textAllCaps="true"
                         android:textColor="@color/white" />
 
                     <Button
@@ -146,7 +160,7 @@
                         android:gravity="center"
                         android:padding="5dp"
                         android:text="Reset"
-                        android:textAllCaps="false"
+                        android:textAllCaps="true"
                         android:textColor="@color/white" />
 
                 </LinearLayout>
@@ -274,7 +288,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="250dp"
                 android:layout_marginTop="5dp"
                 android:background="@drawable/edittext_bg">
 

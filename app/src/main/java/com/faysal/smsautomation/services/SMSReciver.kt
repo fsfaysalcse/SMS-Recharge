@@ -11,6 +11,7 @@ import android.provider.Telephony
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import com.faysal.smsautomation.database.DeliveredSMS
 import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
 import com.faysal.smsautomation.database.SmsDatabase
@@ -31,18 +32,32 @@ class SMSReciver : BroadcastReceiver() {
 
     lateinit var context: Context
 
+    fun insertDelivered(sms: DeliveredSMS) {
+        GlobalScope.launch {
+            try {
+                smsDao.saveDeliveredMessage(sms)
+                Log.d(TAG, "insertDelivered: saved succesfully")
+            }catch (e : Exception){
+                Log.d(TAG, "Failed  "+e.message)
+            }
+        }
+    }
+
 
     override fun onReceive(ct: Context, intent: Intent) {
-
         context = ct
+        val database = SmsDatabase.getInstance(context)
+        smsDao = database.phoneSmsDao()
+
+
+
 
         val background_service = SharedPref.getBoolean(context, Constants.BACKGROUND_SERVVICE)
         if (!background_service) {
             return
         }
 
-        val database = SmsDatabase.getInstance(context)
-        smsDao = database.phoneSmsDao()
+
 
         val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
         if (ActivityCompat.checkSelfPermission(
@@ -72,7 +87,7 @@ class SMSReciver : BroadcastReceiver() {
 
                         val timeStamp: String =
                             SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
-                        insertSms(
+                    /*    insertSms(
                             PhoneSms(
                                 sender_phone = message.originatingAddress,
                                 receiver_phone = phoneNumber,
@@ -80,10 +95,22 @@ class SMSReciver : BroadcastReceiver() {
                                 thread_id = "34543",
                                 timestamp = timeStamp
                             )
-                        )
+                        )*/
+                     //  prepareForBackgroundService()
 
-                        prepareForBackgroundService()
+                        insertDelivered(
+                            DeliveredSMS(
+                                sender_phone = "345345345",
+                                body = message.displayMessageBody,
+                                guid = "35434534",
+                                delivered_time = "2020",
+                                isSend = true,
+                                fromSim = "Sim 1"
+
+                            ))
                     }
+
+
                 }
             }
         }
@@ -124,6 +151,7 @@ class SMSReciver : BroadcastReceiver() {
         InternetService.enqueueWork(context, serviceIntent)
 
     }
+
 
 
     fun insertSms(sms: PhoneSms) {

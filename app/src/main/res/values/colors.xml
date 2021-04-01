@@ -8,8 +8,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFF</color>
     <color name="grey">#DDE6EA</color>
+    <color name="dark_grey">#717475</color>
     <color name="green">#A8EDAB</color>
-    <color name="orrange">#F4511E</color>
+    <color name="orrange">#E53935</color>
     <color name="light_blue">#D567BFEA</color>
     <color name="dark_blue">#1E88E5</color>
     <color name="green_dark">#20AD26</color>

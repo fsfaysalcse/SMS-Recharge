@@ -12,6 +12,7 @@ import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.faysal.smsautomation.Models.OutSms
+import com.faysal.smsautomation.database.DeliveredSMS
 import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
 import com.faysal.smsautomation.database.SmsDatabase
@@ -122,6 +123,8 @@ class InternetService : JobIntentService() {
                                     if (!reciverInfo.isNullOrEmpty()) {
                                         sendOutgoingSms(reciverInfo)
                                     }
+                                }else{
+                                    Log.d(TAG, "enqueueWork: SMS not found")
                                 }
 
                             }
@@ -152,7 +155,7 @@ class InternetService : JobIntentService() {
                 Log.d(TAG, "sendOutgoingSms: " + response.toString())
                 val outsms = Gson().fromJson<OutSms>(response.toString(), OutSms::class.java)
                 Log.d(TAG, "sendOutgoingSms: "+outsms.number)
-                sendSMS(outsms.number,outsms.message+"\n GU ID : "+outsms.guid)
+                sendSMS(outsms.number,outsms.message,outsms.guid)
 
             },
             Response.ErrorListener {
@@ -165,20 +168,53 @@ class InternetService : JobIntentService() {
     }
 
 
-    fun sendSMS(phoneNo: String, msg: String) {
+    fun sendSMS(phoneNo: String, msg: String,guid : String) {
         try {
             val smsManager: SmsManager = SmsManager.getDefault()
-            smsManager.sendTextMessage(phoneNo, null, msg, null, null)
+            smsManager.sendTextMessage(phoneNo, null, msg+"\n\n GUID : "+guid, null, null)
             Toast.makeText(
                 applicationContext, "Message Sent",
                 Toast.LENGTH_LONG
             ).show()
+            insertDelivered(
+                DeliveredSMS(
+                sender_phone = phoneNo,
+                    body = msg,
+                    guid = guid,
+                    delivered_time = "2020",
+                    isSend = true,
+                    fromSim = "Sim 1"
+
+            ))
         } catch (ex: Exception) {
             Toast.makeText(
                 applicationContext, ex.message.toString(),
                 Toast.LENGTH_LONG
             ).show()
+
+            insertDelivered(
+                DeliveredSMS(
+                    sender_phone = phoneNo,
+                    body = msg,
+                    guid = guid,
+                    delivered_time = "2020",
+                    isSend = false,
+                    fromSim = "Sim 1"
+
+                ))
+
             ex.printStackTrace()
+        }
+    }
+
+    fun insertDelivered(sms: DeliveredSMS) {
+        GlobalScope.launch {
+            try {
+                smsDao.saveDeliveredMessage(sms)
+                Log.d(TAG, "SMS delivered successfully")
+            } catch (e: Exception) {
+                Log.d(TAG, "Failed to delivered sms")
+            }
         }
     }
 
