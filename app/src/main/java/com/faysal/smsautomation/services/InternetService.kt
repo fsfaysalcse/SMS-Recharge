@@ -112,6 +112,7 @@ class InternetService : JobIntentService() {
                         if (response.body()?.message == "Success") {
                             deleteSms(sms)
 
+                            Log.d(TAG, "enqueueWork: before save "+sms.body)
 
                             saveActivites(
                                 Activites(
