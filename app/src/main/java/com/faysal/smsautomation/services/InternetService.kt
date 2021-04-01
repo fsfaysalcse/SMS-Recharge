@@ -12,7 +12,7 @@ import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.faysal.smsautomation.Models.OutSms
-import com.faysal.smsautomation.database.DeliveredSMS
+import com.faysal.smsautomation.database.Activites
 import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
 import com.faysal.smsautomation.database.SmsDatabase
@@ -25,6 +25,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.random.Random
 
@@ -111,6 +112,17 @@ class InternetService : JobIntentService() {
                         if (response.body()?.message == "Success") {
                             deleteSms(sms)
 
+
+                            saveActivites(
+                                Activites(
+                                    sender_phone = sms.sender_phone,
+                                    message ="[IN] - > "+ sms.body + ".... this sms has been saved to server",
+                                    timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                                    status = true,
+                                    fromSim = "Sim 1"
+
+                                ))
+
                             val milisecound = SharedPref.getString(applicationContext,Constants.SHARED_INTERVAL).toInt() * 1000
                             SystemClock.sleep(milisecound.toLong())
 
@@ -123,21 +135,17 @@ class InternetService : JobIntentService() {
                                     if (!reciverInfo.isNullOrEmpty()) {
                                         sendOutgoingSms(reciverInfo)
                                     }
-                                }else{
-                                    Log.d(TAG, "enqueueWork: SMS not found")
                                 }
-
                             }
 
                             Log.d(TAG, "Job Successfully done")
 
 
                         }
-                    } else {
-                        Log.d(TAG, "enqueueWork: Failed something wrong")
                     }
 
                 } catch (e: Throwable) {
+                    Toast.makeText(this@InternetService, ""+e.printStackTrace(), Toast.LENGTH_SHORT).show()
                     Log.d(TAG, "enqueueWork: failed " + e.message)
                 }
             }
@@ -172,33 +180,23 @@ class InternetService : JobIntentService() {
         try {
             val smsManager: SmsManager = SmsManager.getDefault()
             smsManager.sendTextMessage(phoneNo, null, msg+"\n\n GUID : "+guid, null, null)
-            Toast.makeText(
-                applicationContext, "Message Sent",
-                Toast.LENGTH_LONG
-            ).show()
-            insertDelivered(
-                DeliveredSMS(
-                sender_phone = phoneNo,
-                    body = msg,
-                    guid = guid,
-                    delivered_time = "2020",
-                    isSend = true,
+
+            saveActivites(
+                Activites(
+                    sender_phone = phoneNo ,
+                    message ="[OUT] - > "+ msg + "  GUID $guid .... this message has been send to "+phoneNo,
+                    timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                    status = true,
                     fromSim = "Sim 1"
 
-            ))
+                ))
         } catch (ex: Exception) {
-            Toast.makeText(
-                applicationContext, ex.message.toString(),
-                Toast.LENGTH_LONG
-            ).show()
-
-            insertDelivered(
-                DeliveredSMS(
-                    sender_phone = phoneNo,
-                    body = msg,
-                    guid = guid,
-                    delivered_time = "2020",
-                    isSend = false,
+            saveActivites(
+                Activites(
+                    sender_phone = phoneNo ,
+                    message ="[OUT] - > "+ msg + "  GUID $guid .... faild sending  sms to "+phoneNo,
+                    timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                    status = false,
                     fromSim = "Sim 1"
 
                 ))
@@ -207,13 +205,12 @@ class InternetService : JobIntentService() {
         }
     }
 
-    fun insertDelivered(sms: DeliveredSMS) {
+    fun saveActivites(sms: Activites) {
         GlobalScope.launch {
             try {
                 smsDao.saveDeliveredMessage(sms)
-                Log.d(TAG, "SMS delivered successfully")
             } catch (e: Exception) {
-                Log.d(TAG, "Failed to delivered sms")
+                e.printStackTrace()
             }
         }
     }
@@ -222,9 +219,8 @@ class InternetService : JobIntentService() {
         GlobalScope.launch {
             try {
                 smsDao.delete(sms)
-                Log.d(TAG, "SMS Deleted successfully")
             } catch (e: Exception) {
-                Log.d(TAG, "Failed to delete sms from room")
+                e.printStackTrace()
             }
         }
     }

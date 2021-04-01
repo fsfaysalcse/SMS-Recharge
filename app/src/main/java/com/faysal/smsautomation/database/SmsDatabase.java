@@ -6,7 +6,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {PhoneSms.class, DeliveredSMS.class}, version = 2)
+@Database(entities = {PhoneSms.class, Activites.class}, version = 2)
 public abstract class SmsDatabase extends RoomDatabase {
     private static SmsDatabase instance;
     public abstract PhoneSmsDao phoneSmsDao();

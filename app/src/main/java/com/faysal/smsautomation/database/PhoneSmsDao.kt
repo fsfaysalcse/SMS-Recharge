@@ -15,9 +15,9 @@ interface PhoneSmsDao {
     suspend fun delete(sms: PhoneSms)
 
     @Insert
-    suspend fun saveDeliveredMessage(sms: DeliveredSMS)
+    suspend fun saveDeliveredMessage(sms: Activites)
 
 
-    @Query("SELECT * FROM delivered_sms")
-    fun getAllDelivered(): LiveData<List<DeliveredSMS>>
+    @Query("SELECT * FROM delivered_sms ORDER BY timestamp DESC LIMIT 20")
+    fun getAllDelivered(): LiveData<List<Activites>>
 }

@@ -11,7 +11,7 @@ import android.provider.Telephony
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import com.faysal.smsautomation.database.DeliveredSMS
+import com.faysal.smsautomation.database.Activites
 import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
 import com.faysal.smsautomation.database.SmsDatabase
@@ -32,7 +32,7 @@ class SMSReciver : BroadcastReceiver() {
 
     lateinit var context: Context
 
-    fun insertDelivered(sms: DeliveredSMS) {
+    fun saveActivites(sms: Activites) {
         GlobalScope.launch {
             try {
                 smsDao.saveDeliveredMessage(sms)
@@ -51,13 +51,10 @@ class SMSReciver : BroadcastReceiver() {
 
 
 
-
         val background_service = SharedPref.getBoolean(context, Constants.BACKGROUND_SERVVICE)
         if (!background_service) {
             return
         }
-
-
 
         val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
         if (ActivityCompat.checkSelfPermission(
@@ -87,7 +84,7 @@ class SMSReciver : BroadcastReceiver() {
 
                         val timeStamp: String =
                             SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
-                    /*    insertSms(
+                        insertSms(
                             PhoneSms(
                                 sender_phone = message.originatingAddress,
                                 receiver_phone = phoneNumber,
@@ -95,19 +92,9 @@ class SMSReciver : BroadcastReceiver() {
                                 thread_id = "34543",
                                 timestamp = timeStamp
                             )
-                        )*/
-                     //  prepareForBackgroundService()
+                        )
+                        prepareForBackgroundService()
 
-                        insertDelivered(
-                            DeliveredSMS(
-                                sender_phone = "345345345",
-                                body = message.displayMessageBody,
-                                guid = "35434534",
-                                delivered_time = "2020",
-                                isSend = true,
-                                fromSim = "Sim 1"
-
-                            ))
                     }
 
 

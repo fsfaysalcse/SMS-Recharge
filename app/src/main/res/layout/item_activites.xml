@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="10dp"
+    android:layout_margin="5dp"
+    android:background="@drawable/activites_item_bg"
     android:orientation="vertical">
 
     <TextView
@@ -12,16 +14,26 @@
         android:layout_height="wrap_content"
         android:text=" ☑ SMS has been send to this number 334534534"
         android:fontFamily="@font/montserrat_regular"
-        android:textColor="@color/dark_grey"/>
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="@color/black"
+        android:textAllCaps="false"/>
 
     <TextView
-        android:id="@+id/guid"
+        android:id="@+id/ex_note"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text=" - GUID : 345345"
+        android:text=" - Extra Notes"
         android:fontFamily="@font/montserrat_regular"
         android:textColor="@color/teal_200"
-        android:layout_marginTop="10dp"/>
+        android:layout_marginTop="5dp"
+        android:visibility="gone"
+        android:textSize="12sp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="5dp"
+        android:background="#9E9B9B"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -37,18 +49,22 @@
             android:text="SIM 1"
             android:layout_gravity="center"
             android:gravity="left"
+            android:textSize="10sp"
+            android:textAllCaps="true"
             android:fontFamily="@font/montserrat_regular"
-            android:textColor="@color/dark_grey"/>
+            android:textColor="@color/orrange"/>
         <TextView
             android:id="@+id/result"
             android:layout_weight="1.5"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="FROM SIM 1"
+            android:text="SUCCESS"
             android:layout_gravity="center"
             android:gravity="center"
+            android:textSize="10sp"
             android:fontFamily="@font/montserrat_regular"
-            android:textColor="@color/dark_grey"/>
+            android:textColor="@color/dark_blue"
+            android:textAllCaps="true"/>
         <TextView
             android:id="@+id/timestamp"
             android:layout_weight="1.5"
@@ -57,8 +73,10 @@
             android:text="10-04-2020"
             android:layout_gravity="center"
             android:gravity="right"
+            android:textSize="10sp"
             android:fontFamily="@font/montserrat_regular"
-            android:textColor="@color/dark_grey"/>
+            android:textColor="@color/dark_grey"
+            android:textAllCaps="true"/>
 
 
     </LinearLayout>

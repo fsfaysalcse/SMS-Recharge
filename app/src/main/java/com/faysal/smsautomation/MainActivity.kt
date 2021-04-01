@@ -7,6 +7,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -23,10 +24,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.faysal.smsautomation.Models.Company
 import com.faysal.smsautomation.Models.Interval
 import com.faysal.smsautomation.Models.Notice
 import com.faysal.smsautomation.Models.Service
+import com.faysal.smsautomation.adapters.DeliveredMessageAdapter
 import com.faysal.smsautomation.viewmodel.SMSViewModel
 import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
@@ -53,6 +56,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var api2Service: ApiService
 
     lateinit var smsViewModel: SMSViewModel
+
+    lateinit var listAdapter : DeliveredMessageAdapter
 
 
 
@@ -104,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         apiService = NetworkBuilder.getApiService()
         api2Service = NetworkBuilder.getAnotherApiService()
         smsViewModel = ViewModelProviders.of(this).get(SMSViewModel::class.java)
+        listAdapter = DeliveredMessageAdapter()
     }
 
     private fun setUpViewsWithData() {
@@ -115,33 +121,70 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setUpForLastsActivites() {
+        binding.activitesList.apply {
+            adapter = listAdapter
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            setHasFixedSize(true)
+        }
         smsViewModel.alldeliverdSms.observe(this, Observer {
-            for (s in it) {
-                Log.d(TAG, "setUpForLastsActivites: "+s.body)
-            }
+            listAdapter.setList(it)
         })
     }
 
 
     private fun setUpForButtonClickHandeler() {
+
+        val service = SharedPref.getBoolean(this,Constants.BACKGROUND_SERVVICE)
+
+        if (service){
+            binding.btnStart.apply {
+                text = "Stop"
+               setBackgroundColor(Color.parseColor("#E53935"))
+            }
+        }else{
+            binding.btnStart.apply {
+                text = "Start"
+                setBackgroundColor(Color.parseColor("#20AD26"))
+            }
+        }
+
+
         binding.btnSave.setOnClickListener {
             saveOperation()
         }
 
         binding.btnReset.setOnClickListener {
 
-            SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, false)
-            Util.showAlertMessage(binding.root, "Background Service has been stopped ")
+            SharedPref.clearSharedPreferences(this)
         }
 
         binding.btnStart.setOnClickListener {
 
-            if (isAbaleToStartService){
-                Util.showAlertMessage(binding.root, "Background service started successfully >>")
-                SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
+            val service = SharedPref.getBoolean(this,Constants.BACKGROUND_SERVVICE)
+
+            if (!service){
+                if (isAbaleToStartService){
+                    Util.showAlertMessage(binding.root, "Background service started successfully.")
+                    SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
+                    binding.btnStart.apply {
+                        text = "Stop"
+                        setBackgroundColor(Color.parseColor("#E53935"))
+                    }
+
+                }else{
+                    showErrorMessageOKCancel("Press the save button before start background service")
+                }
             }else{
-                showErrorMessageOKCancel("Press the save button before start background service")
+                SharedPref.putBoolean(this,Constants.BACKGROUND_SERVVICE,false)
+                Util.showAlertMessage(binding.root, "Background Service has been stopped ")
+                binding.btnStart.apply {
+                    text = "Start"
+                    setBackgroundColor(Color.parseColor("#20AD26"))
+                }
+
             }
+
+
 
         }
     }

@@ -25,30 +25,33 @@
                 android:orientation="vertical"
                 android:padding="10dp">
 
+                <EditText
+                    android:id="@+id/et_domain_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:backgroundTint="@color/white"
+                    android:layout_marginRight="3dp"
+                    android:layout_weight="4"
+                    android:background="@drawable/edittext_bg"
+                    android:fontFamily="@font/montserrat_regular"
+                    android:gravity="center"
+                    android:hint="Domain Name"
+                    android:text="server1.eflexi.xyz"
+                    android:maxLines="1"
+                    android:padding="15dp"
+                    android:layout_marginBottom="5dp"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/black" />
+
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:orientation="horizontal">
 
-                    <EditText
-                        android:id="@+id/et_domain_name"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:backgroundTint="@color/white"
-                        android:layout_marginRight="3dp"
-                        android:layout_weight="4"
-                        android:background="@drawable/edittext_bg"
-                        android:fontFamily="@font/montserrat_regular"
-                        android:gravity="center"
-                        android:hint="Domain Name"
-                        android:text="server1.eflexi.xyz"
-                        android:maxLines="1"
-                        android:padding="5dp"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                        android:textColor="@color/black"
-                        android:textColorHint="@color/black" />
+
 
                     <EditText
                         android:id="@+id/et_verification_code"
@@ -122,10 +125,9 @@
                         android:layout_marginLeft="3dp"
                         android:layout_marginRight="3dp"
                         android:layout_weight="5"
-                        android:backgroundTint="#FB8C00"
-                        android:background="@drawable/savebtn_bg"
                         android:fontFamily="@font/montserrat_regular"
                         android:gravity="center"
+                        android:background="@color/red_dark"
                         android:padding="5dp"
                         android:text="Start"
                         android:textAllCaps="true"
@@ -249,6 +251,7 @@
             </LinearLayout>
 
 
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
@@ -287,35 +290,52 @@
             </LinearLayout>
 
             <LinearLayout
+                android:weightSum="5"
                 android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_marginTop="5dp"
-                android:background="@drawable/edittext_bg">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:layout_marginTop="5dp"
-                android:padding="5dp"
-                android:orientation="vertical"
-                android:background="@drawable/edittext_bg">
-
-                <TextView
-                    android:id="@+id/tv_notice"
+                <LinearLayout
+                    android:layout_weight="4"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/edittext_bg"
-                    android:fontFamily="@font/montserrat_bold"
-                    android:padding="10dp"
-                    android:text="Notice Display"
-                    android:textColor="@color/black" />
+                    android:layout_height="0dp"
+                    android:layout_marginTop="5dp"
+                    android:background="@drawable/edittext_bg">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/activites_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"/>
+
+                </LinearLayout>
 
 
+                <LinearLayout
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="5dp"
+                    android:padding="5dp"
+                    android:orientation="vertical"
+                    android:background="@drawable/edittext_bg">
+
+                    <TextView
+                        android:id="@+id/tv_notice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/edittext_bg"
+                        android:fontFamily="@font/montserrat_bold"
+                        android:padding="10dp"
+                        android:text="Notice Display"
+                        android:textColor="@color/black" />
+
+
+
+                </LinearLayout>
 
             </LinearLayout>
+
+
 
 
         </LinearLayout>
