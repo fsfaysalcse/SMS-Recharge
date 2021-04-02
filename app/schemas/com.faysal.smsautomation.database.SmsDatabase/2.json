@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "6b97d571a9f18dffaa604f2d09baa849",
+    "identityHash": "2b987337ff0ca13d3d8e8615d85be922",
     "entities": [
       {
         "tableName": "phone_sms",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`smsid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sender_phone` TEXT, `receiver_phone` TEXT, `body` TEXT, `thread_id` TEXT, `timestamp` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`smsid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sender_phone` TEXT, `receiver_phone` TEXT, `body` TEXT, `thread_id` TEXT, `timestamp` TEXT, `processRunning` INTEGER)",
         "fields": [
           {
             "fieldPath": "smsid",
@@ -43,6 +43,12 @@
             "columnName": "timestamp",
             "affinity": "TEXT",
             "notNull": false
+          },
+          {
+            "fieldPath": "processRunning",
+            "columnName": "processRunning",
+            "affinity": "INTEGER",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -56,7 +62,7 @@
       },
       {
         "tableName": "delivered_sms",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`deliverid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `number` TEXT, `message` TEXT, `timestamp` TEXT, `status` INTEGER NOT NULL, `fromSim` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`deliverid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `number` TEXT, `message` TEXT, `timestamp` TEXT, `status` INTEGER, `fromSim` TEXT)",
         "fields": [
           {
             "fieldPath": "deliverid",
@@ -71,7 +77,7 @@
             "notNull": false
           },
           {
-            "fieldPath": "body",
+            "fieldPath": "message",
             "columnName": "message",
             "affinity": "TEXT",
             "notNull": false
@@ -83,10 +89,10 @@
             "notNull": false
           },
           {
-            "fieldPath": "isSend",
+            "fieldPath": "status",
             "columnName": "status",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "fromSim",
@@ -108,7 +114,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6b97d571a9f18dffaa604f2d09baa849')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2b987337ff0ca13d3d8e8615d85be922')"
     ]
   }
 }

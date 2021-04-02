@@ -3,14 +3,17 @@ package com.faysal.smsautomation
 import android.Manifest
 import android.Manifest.permission.*
 import android.R
+import android.annotation.TargetApi
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Telephony
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
@@ -30,12 +33,12 @@ import com.faysal.smsautomation.Models.Interval
 import com.faysal.smsautomation.Models.Notice
 import com.faysal.smsautomation.Models.Service
 import com.faysal.smsautomation.adapters.DeliveredMessageAdapter
-import com.faysal.smsautomation.viewmodel.SMSViewModel
 import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
 import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
+import com.faysal.smsautomation.viewmodel.SMSViewModel
 import com.google.android.material.snackbar.Snackbar
 import dmax.dialog.SpotsDialog
 import kotlinx.coroutines.*
@@ -57,8 +60,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var smsViewModel: SMSViewModel
 
-    lateinit var listAdapter : DeliveredMessageAdapter
-
+    lateinit var listAdapter: DeliveredMessageAdapter
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,9 +72,8 @@ class MainActivity : AppCompatActivity() {
         providePermission()
         setUpViewsWithData()
 
+
         //sendSMS("123423532","Hello World")
-
-
 
 
     }
@@ -110,7 +111,13 @@ class MainActivity : AppCompatActivity() {
         api2Service = NetworkBuilder.getAnotherApiService()
         smsViewModel = ViewModelProviders.of(this).get(SMSViewModel::class.java)
         listAdapter = DeliveredMessageAdapter()
+
+        handelIsDefaultApp()
+
     }
+
+
+
 
     private fun setUpViewsWithData() {
         setupSimInfo()
@@ -134,14 +141,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpForButtonClickHandeler() {
 
-        val service = SharedPref.getBoolean(this,Constants.BACKGROUND_SERVVICE)
+        val service = SharedPref.getBoolean(this, Constants.BACKGROUND_SERVVICE)
 
-        if (service){
+        if (service) {
             binding.btnStart.apply {
                 text = "Stop"
-               setBackgroundColor(Color.parseColor("#E53935"))
+                setBackgroundColor(Color.parseColor("#E53935"))
             }
-        }else{
+        } else {
             binding.btnStart.apply {
                 text = "Start"
                 setBackgroundColor(Color.parseColor("#20AD26"))
@@ -155,15 +162,18 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnReset.setOnClickListener {
 
+            binding.etDomainName.text.clear()
+            binding.etVerificationCode.text.clear()
+
             SharedPref.clearSharedPreferences(this)
         }
 
         binding.btnStart.setOnClickListener {
 
-            val service = SharedPref.getBoolean(this,Constants.BACKGROUND_SERVVICE)
+            val service = SharedPref.getBoolean(this, Constants.BACKGROUND_SERVVICE)
 
-            if (!service){
-                if (isAbaleToStartService){
+            if (!service) {
+                if (isAbaleToStartService) {
                     Util.showAlertMessage(binding.root, "Background service started successfully.")
                     SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
                     binding.btnStart.apply {
@@ -171,11 +181,11 @@ class MainActivity : AppCompatActivity() {
                         setBackgroundColor(Color.parseColor("#E53935"))
                     }
 
-                }else{
+                } else {
                     showErrorMessageOKCancel("Press the save button before start background service")
                 }
-            }else{
-                SharedPref.putBoolean(this,Constants.BACKGROUND_SERVVICE,false)
+            } else {
+                SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, false)
                 Util.showAlertMessage(binding.root, "Background Service has been stopped ")
                 binding.btnStart.apply {
                     text = "Start"
@@ -185,17 +195,17 @@ class MainActivity : AppCompatActivity() {
             }
 
 
-
         }
     }
 
     private fun saveOperation() {
-        if (!Util.isOnline(this)){
+        if (!Util.isOnline(this)) {
             showErrorMessageOKCancel("Internet connection failed ! ")
             return
         }
 
-        val loading: AlertDialog = SpotsDialog.Builder().setContext(this).setCancelable(false).build()
+        val loading: AlertDialog =
+            SpotsDialog.Builder().setContext(this).setCancelable(false).build()
 
         val domainName = binding.etDomainName.text.toString().trim()
         val verificationCode = binding.etVerificationCode.text.toString().trim()
@@ -286,8 +296,6 @@ class MainActivity : AppCompatActivity() {
         Util.showAlertMessage(binding.root, "All the form information saved successfully")
 
 
-
-
         /*  if (!domainName.isUrlValid()){
               Util.showAlertMessage(binding.root,"Invalid domain name.")
           }*/
@@ -297,13 +305,14 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun setUpNetworkViews() {
-        if (Util.isOnline(this)==false){
+        if (Util.isOnline(this) == false) {
             showErrorMessageOKCancel("Internet connection failed ! ")
             return
         }
 
         var dialog: AlertDialog =
-            SpotsDialog.Builder().setContext(this).setMessage("PLEASE WAIT").setCancelable(false).build()
+            SpotsDialog.Builder().setContext(this).setMessage("PLEASE WAIT").setCancelable(false)
+                .build()
         dialog.show()
 
         lifecycleScope.launchWhenStarted {
@@ -346,9 +355,9 @@ class MainActivity : AppCompatActivity() {
         if (response.isSuccessful) {
             var service = response.body()
             if (service != null) {
-                val service_arrray : ArrayList<String> = ArrayList<String>()
-                for (item in  service){
-                     service_arrray.add(item.service)
+                val service_arrray: ArrayList<String> = ArrayList<String>()
+                for (item in service) {
+                    service_arrray.add(item.service)
                 }
                 binding.tvService.adapter = ArrayAdapter<String>(
                     this,
@@ -377,7 +386,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSimInfo() {
-        if (ActivityCompat.checkSelfPermission(
+/*        if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_PHONE_STATE
             ) == PackageManager.PERMISSION_GRANTED
@@ -405,7 +414,7 @@ class MainActivity : AppCompatActivity() {
             }
 
 
-        }
+        }*/
     }
 
     private fun providePermission() {
@@ -448,8 +457,8 @@ class MainActivity : AppCompatActivity() {
                 val readSmsAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED
                 val sendSmsAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED
                 val phoneStateAccepted = grantResults[2] == PackageManager.PERMISSION_GRANTED
-                if (readSmsAccepted && sendSmsAccepted && phoneStateAccepted) isPermissionGranted =
-                    true
+                if (readSmsAccepted && sendSmsAccepted && phoneStateAccepted)
+                    isPermissionGranted = true
                 else {
                     Snackbar.make(
                         binding.root,
@@ -496,6 +505,25 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
     }
+
+    fun handelIsDefaultApp() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            if (Telephony.Sms.getDefaultSmsPackage(this) != packageName) {
+
+                val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)
+                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName)
+                startActivity(intent)
+
+
+                Toast.makeText(this, "Change default sms app", Toast.LENGTH_SHORT).show()
+            } else {
+
+            }
+        }
+    }
+
+
+
 
 
 }

@@ -58,13 +58,15 @@ class InternetService : JobIntentService() {
 
     override fun onHandleWork(intent: Intent) {
 
-        Log.d(TAG, "onHandleWork: ")
 
         val smsid = intent.getIntExtra("smsid", -1)
         val sender = intent.getStringExtra("sender")
         val simNo = intent.getStringExtra("simNo")
         val datetime = intent.getStringExtra("datetime")
         val smsBody = intent.getStringExtra("smsBody")
+        val isProcessing = intent.getBooleanExtra("isProcessing",false)
+
+        Log.d(TAG, "onHandleWork: "+smsBody)
 
         enqueueWork(
             PhoneSms(
@@ -73,7 +75,8 @@ class InternetService : JobIntentService() {
                 simNo,
                 smsBody,
                 "123",
-                datetime
+                datetime,
+                processRunning = isProcessing
             )
         )
     }
@@ -105,8 +108,7 @@ class InternetService : JobIntentService() {
                         )
                     }.await()
 
-                    val outgoingResponse =
-                        async { apiService.getOutgoingMessages(verifycode) }.await()
+                    val outgoingResponse = async { apiService.getOutgoingMessages(verifycode) }.await()
 
                     if (response.isSuccessful) {
                         if (response.body()?.message == "Success") {
@@ -148,6 +150,12 @@ class InternetService : JobIntentService() {
                 } catch (e: Throwable) {
                     Toast.makeText(this@InternetService, ""+e.printStackTrace(), Toast.LENGTH_SHORT).show()
                     Log.d(TAG, "enqueueWork: failed " + e.message)
+
+                    val smsNew = sms.apply {
+                        processRunning = false
+                    }
+
+                    updateSms(smsNew)
                 }
             }
         }
@@ -236,6 +244,17 @@ class InternetService : JobIntentService() {
         return super.onStopCurrentWork()
     }
 
+
+    fun updateSms(sms: PhoneSms) {
+        GlobalScope.launch {
+            try {
+                smsDao.update(sms)
+                Log.d(TAG, "SMS update successfully")
+            } catch (e: Exception) {
+                Log.d(TAG, "Failed to update data into room")
+            }
+        }
+    }
 
 }
 

@@ -32,7 +32,7 @@ class DeliveredMessageAdapter : RecyclerView.Adapter<DeliveredMessageAdapter.Del
            // ex_note.text = "GUID : "+activites.sender_phone
             timestamp.text = activites.timestamp+""
 
-            if (activites.status){
+            if (activites.status==true){
                 result.text = "SUCCESS"
                 result.setTextColor(Color.parseColor("#20AD26"))
             }else{

@@ -62,7 +62,7 @@ interface ApiService {
         @Query("sender") sender : String?,
         @Query("simNo") simNo : String?,
         @Query("datetime") datetime : String?,
-        @Query("smsBody") smsBody : String?,
+        @Query("smsBody") smsBody : String?
     ) : Response<SaveSms>
 
 

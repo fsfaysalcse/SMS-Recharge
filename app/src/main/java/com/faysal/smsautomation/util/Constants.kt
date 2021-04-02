@@ -10,4 +10,10 @@ object Constants {
     var SHARED_SIM_1_ACTIVE = "shared_sim_1_active"
     var SHARED_SIM_2_ACTIVE = "shared_sim_2_active"
 
+    var SMS_TYPE_RECIEVED = 1
+    var SMS_TYPE_SENT = 2
+
+    var SMS_READ_STATE_READ = 0
+    var SMS_READ_STATE_UNREAD = 1
+
 }

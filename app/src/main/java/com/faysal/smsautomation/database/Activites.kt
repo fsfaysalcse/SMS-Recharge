@@ -7,11 +7,11 @@ import java.sql.Timestamp
 
 @Entity(tableName = "delivered_sms")
 data class Activites(
-    @PrimaryKey(autoGenerate = true) var deliverid : Int = 0,
-    @ColumnInfo(name = "number") var sender_phone : String?,
-    @ColumnInfo(name = "message") var message : String?,
-    @ColumnInfo(name = "timestamp") var timestamp : String?,
-    @ColumnInfo(name = "status") var status: Boolean = false,
-    @ColumnInfo(name = "fromSim") var fromSim: String?
+    @PrimaryKey(autoGenerate = true) val deliverid : Int = 0,
+    @ColumnInfo(name = "number") val sender_phone : String?,
+    @ColumnInfo(name = "message") val message : String?,
+    @ColumnInfo(name = "timestamp") val timestamp : String?,
+    @ColumnInfo(name = "status") val status: Boolean?,
+    @ColumnInfo(name = "fromSim") val fromSim: String?
 
 )
