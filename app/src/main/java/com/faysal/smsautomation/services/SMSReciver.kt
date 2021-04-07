@@ -1,6 +1,7 @@
 package com.faysal.smsautomation.services
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -29,26 +30,15 @@ class SMSReciver : BroadcastReceiver() {
     private val SMS_RECEIVED: String = "android.provider.Telephony.SMS_RECEIVED"
     private val TAG = "SMSBroadcastReceiver"
     lateinit var smsDao: PhoneSmsDao
-    lateinit var database :  SmsDatabase
+    lateinit var database: SmsDatabase
 
     lateinit var context: Context
 
-    fun saveActivites(sms: Activites) {
 
-        GlobalScope.launch {
-            try {
-                smsDao.saveDeliveredMessage(sms)
-                Log.d(TAG, "insertDelivered: saved succesfully")
-            } catch (e: Exception) {
-                Log.d(TAG, "Failed  " + e.message)
-            }
-        }
-    }
-
-
+    @SuppressLint("MissingPermission")
     override fun onReceive(ct: Context, intent: Intent) {
 
-
+        Log.d(TAG, "onReceive: receive a sms")
         context = ct
         database = SmsDatabase.getInstance(context)
         smsDao = database.phoneSmsDao()
@@ -61,19 +51,7 @@ class SMSReciver : BroadcastReceiver() {
 
         val telephonyManager =
             context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_SMS
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_PHONE_NUMBERS
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_PHONE_STATE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
+
         val phoneNumber = telephonyManager!!.line1Number
         Log.d(TAG, "onReceive: " + phoneNumber)
 
@@ -86,8 +64,6 @@ class SMSReciver : BroadcastReceiver() {
                     val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
                     for (message in messages) {
 
-                        val timeStamp: String =
-                            SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
                         insertSms(
                             PhoneSms(
                                 smsid = 0,
@@ -95,13 +71,20 @@ class SMSReciver : BroadcastReceiver() {
                                 receiver_phone = phoneNumber,
                                 body = message.displayMessageBody,
                                 thread_id = "34543",
-                                timestamp = timeStamp,
+                                timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
                                 processRunning = false
                             )
                         )
 
-                      /*  val simSlot = intent.getIntExtra("simSlot", -1)
-                        Log.d(TAG, "onReceive: Sim slot "+simSlot)*/
+                        saveActivites(
+                            Activites(
+                                message = "Message Recived : " + message.displayMessageBody,
+                                timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                                status = true
+                            )
+                        )
+
+
                         prepareForBackgroundService()
                     }
 
@@ -109,42 +92,49 @@ class SMSReciver : BroadcastReceiver() {
             }
         }
 
-
     }
 
+
+    fun saveActivites(activites: Activites) {
+
+        GlobalScope.launch {
+            try {
+                smsDao.saveDeliveredMessage(activites)
+                Log.d(TAG, "insertDelivered: saved succesfully")
+            } catch (e: Exception) {
+                Log.d(TAG, "Failed  " + e.message)
+            }
+        }
+    }
 
 
     private fun prepareForBackgroundService() {
 
+        smsDao = database.phoneSmsDao()
 
-        var listSMS: List<PhoneSms> = mutableListOf()
-
-
-
-        GlobalScope.async {
-            try {
-
-                listSMS = smsDao.getAll()
-                Log.d(TAG, "prepareForBackgroundService: " + listSMS.size)
-
-                listSMS.forEach { sms ->
+        var listedDataJob = GlobalScope.async { smsDao.getAll() }
+        listedDataJob.invokeOnCompletion {cause ->
+            if (cause != null) {
+                //something happened and the job didn't finish successfully.  Handle that here
+                Unit
+            } else {
+                val myData = listedDataJob.getCompleted()
+                Log.d(TAG, "prepareForBackgroundService:test "+myData.size)
+                myData.forEach { sms ->
                     Log.d(
                         TAG,
                         "prepareForBackgroundService: " + sms.body + " ---> " + sms.processRunning
                     )
                     sendSmsToBackgroundService(sms)
-                    val milisecound = SharedPref.getString(context, Constants.SHARED_INTERVAL).toInt() * 1000
+                    val milisecound =
+                        SharedPref.getString(context, Constants.SHARED_INTERVAL).toInt() * 1000
                     SystemClock.sleep(milisecound.toLong())
                 }
-
-
-            } catch (e: Exception) {
-                Log.d(TAG, "prepareForBackgroundService: " + e.message)
-                e.printStackTrace()
             }
         }
-    }
 
+
+    }
 
 
     private fun sendSmsToBackgroundService(sms: PhoneSms) {

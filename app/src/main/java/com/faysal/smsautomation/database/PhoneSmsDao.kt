@@ -6,7 +6,7 @@ import androidx.room.*
 @Dao
 interface PhoneSmsDao {
     @Query("SELECT * FROM phone_sms WHERE processRunning = 0")
-    fun getAll(): List<PhoneSms>
+    suspend fun getAll(): List<PhoneSms>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(sms: PhoneSms)

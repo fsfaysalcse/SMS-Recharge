@@ -3,16 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="10dp"
-    android:layout_margin="5dp"
-    android:background="@drawable/activites_item_bg"
+    android:padding="5dp"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text=" ☑ SMS has been send to this number 334534534"
+        android:text=" SMS has been send to this number 334534534"
         android:fontFamily="@font/montserrat_regular"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textColor="@color/black"
@@ -33,12 +31,14 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="5dp"
+        android:visibility="gone"
         android:background="#9E9B9B"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
+        android:visibility="gone"
         android:orientation="horizontal">
 
         <TextView

@@ -27,53 +27,12 @@
                 android:orientation="vertical"
                 android:padding="10dp">
 
-                <EditText
-                    android:id="@+id/et_domain_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:backgroundTint="@color/white"
-                    android:layout_marginRight="3dp"
-                    android:layout_weight="4"
-                    android:background="@drawable/edittext_bg"
-                    android:fontFamily="@font/montserrat_regular"
-                    android:gravity="center"
-                    android:hint="Domain Name"
-                    android:text="server1.eflexi.xyz"
-                    android:maxLines="1"
-                    android:padding="15dp"
-                    android:layout_marginBottom="5dp"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                    android:textColor="@color/black"
-                    android:textColorHint="@color/black" />
-
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:orientation="horizontal">
 
-
-
-                    <EditText
-                        android:id="@+id/et_verification_code"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:backgroundTint="@color/white"
-                        android:layout_marginRight="3dp"
-                        android:layout_weight="2"
-                        android:background="@drawable/edittext_bg"
-                        android:fontFamily="@font/montserrat_regular"
-                        android:gravity="center"
-                        android:inputType="textPassword"
-                        android:hint="V.Code"
-                        android:text="100"
-                        android:maxLines="1"
-                        android:padding="5dp"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                        android:textColor="@color/black"
-                        android:textColorHint="@color/black" />
 
 
                     <LinearLayout

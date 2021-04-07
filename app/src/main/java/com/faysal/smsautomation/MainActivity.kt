@@ -112,11 +112,7 @@ class MainActivity : AppCompatActivity() {
         smsViewModel = ViewModelProviders.of(this).get(SMSViewModel::class.java)
         listAdapter = DeliveredMessageAdapter()
 
-        handelIsDefaultApp()
-
     }
-
-
 
 
     private fun setUpViewsWithData() {
@@ -161,11 +157,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnReset.setOnClickListener {
-
-            binding.etDomainName.text.clear()
-            binding.etVerificationCode.text.clear()
-
             SharedPref.clearSharedPreferences(this)
+            startActivity(Intent(this,SplashScreen::class.java))
+            finish()
         }
 
         binding.btnStart.setOnClickListener {
@@ -204,29 +198,11 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val loading: AlertDialog =
-            SpotsDialog.Builder().setContext(this).setCancelable(false).build()
 
-        val domainName = binding.etDomainName.text.toString().trim()
-        val verificationCode = binding.etVerificationCode.text.toString().trim()
         val service = binding.tvService.selectedItem?.toString()
         val interval = binding.tvInterval.text.toString().trim()
 
-        var domStatus = false
-        var vCodeStatus = false
 
-        if (domainName.isNullOrEmpty()) {
-            Util.showAlertMessage(
-                binding.root,
-                "Please enter domain name to save and start service."
-            )
-            return
-        }
-
-        if (verificationCode.isNullOrEmpty()) {
-            Util.showAlertMessage(binding.root, "Please enter verification code.")
-            return
-        }
 
         if (service.isNullOrEmpty()) {
             Util.showAlertMessage(
@@ -242,51 +218,10 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        runBlocking {
-            supervisorScope {
-                try {
-                    val responseDomain = async { api2Service.getDomainInfo(domainName) }.await()
-                    val responseVerificationCode =
-                        async { apiService.getVerificationCodeInfo(verificationCode) }.await()
-
-                    if (responseDomain.isSuccessful) {
-                        if (responseDomain.body()?.status == "1") {
-                            domStatus = true
-                        }
-                    }
-
-                    if (responseVerificationCode.isSuccessful) {
-                        if (responseVerificationCode.body()?.status == 1) {
-                            vCodeStatus = true
-                        }
-                    }
-
-                } catch (t: Throwable) {
-                    domStatus = false
-
-                }
-            }
-
-        }
 
 
-        if (domStatus == false) {
-            showErrorMessageOKCancel("This domain not exist in Database.")
-            // Util.showAlertMessage(binding.root,"This domain not exist in Database.")
-            return
-        }
-
-
-        if (vCodeStatus == false) {
-            showErrorMessageOKCancel("Verification code invalid .")
-            return
-        }
-
-
-        SharedPref.putString(this, Constants.SHARED_DOMAIN_NAME, domainName)
         SharedPref.putString(this, Constants.SHARED_INTERVAL, interval)
         SharedPref.putString(this, Constants.SHARED_SERVICE, service)
-        SharedPref.putString(this, Constants.SHARED_VERIFICATION_CODE, verificationCode)
         SharedPref.putBoolean(this, Constants.SHARED_SIM_1_ACTIVE, true)
         SharedPref.putBoolean(this, Constants.SHARED_SIM_2_ACTIVE, true)
 
@@ -436,13 +371,18 @@ class MainActivity : AppCompatActivity() {
                 applicationContext,
                 Manifest.permission.READ_PHONE_STATE
             )
-        return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED && result2 == PackageManager.PERMISSION_GRANTED
+        val result3 =
+            ContextCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.RECEIVE_SMS
+            )
+        return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED && result2 == PackageManager.PERMISSION_GRANTED && result3 == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestPermission() {
         ActivityCompat.requestPermissions(
             this,
-            arrayOf(READ_SMS, SEND_SMS, READ_PHONE_STATE),
+            arrayOf(READ_SMS, SEND_SMS, READ_PHONE_STATE, RECEIVE_SMS),
             PERMISSION_REQUEST_CODE
         )
     }
@@ -457,7 +397,8 @@ class MainActivity : AppCompatActivity() {
                 val readSmsAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED
                 val sendSmsAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED
                 val phoneStateAccepted = grantResults[2] == PackageManager.PERMISSION_GRANTED
-                if (readSmsAccepted && sendSmsAccepted && phoneStateAccepted)
+                val recivedSmsAccepted = grantResults[3] == PackageManager.PERMISSION_GRANTED
+                if (readSmsAccepted && sendSmsAccepted && phoneStateAccepted && recivedSmsAccepted)
                     isPermissionGranted = true
                 else {
                     Snackbar.make(
@@ -505,25 +446,6 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
     }
-
-    fun handelIsDefaultApp() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if (Telephony.Sms.getDefaultSmsPackage(this) != packageName) {
-
-                val intent = Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)
-                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName)
-                startActivity(intent)
-
-
-                Toast.makeText(this, "Change default sms app", Toast.LENGTH_SHORT).show()
-            } else {
-
-            }
-        }
-    }
-
-
-
 
 
 }

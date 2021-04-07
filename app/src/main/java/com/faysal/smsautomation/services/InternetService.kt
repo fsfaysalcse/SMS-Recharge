@@ -64,9 +64,9 @@ class InternetService : JobIntentService() {
         val simNo = intent.getStringExtra("simNo")
         val datetime = intent.getStringExtra("datetime")
         val smsBody = intent.getStringExtra("smsBody")
-        val isProcessing = intent.getBooleanExtra("isProcessing",false)
+        val isProcessing = intent.getBooleanExtra("isProcessing", false)
 
-        Log.d(TAG, "onHandleWork: "+smsBody)
+        Log.d(TAG, "onHandleWork: " + smsBody)
 
         enqueueWork(
             PhoneSms(
@@ -108,25 +108,27 @@ class InternetService : JobIntentService() {
                         )
                     }.await()
 
-                    val outgoingResponse = async { apiService.getOutgoingMessages(verifycode) }.await()
+                    val outgoingResponse =
+                        async { apiService.getOutgoingMessages(verifycode) }.await()
 
                     if (response.isSuccessful) {
                         if (response.body()?.message == "Success") {
                             deleteSms(sms)
 
-                            Log.d(TAG, "enqueueWork: before save "+sms.body)
+                            Log.d(TAG, "enqueueWork: before save " + sms.body)
 
                             saveActivites(
                                 Activites(
-                                    sender_phone = sms.sender_phone,
-                                    message ="[IN] - > "+ sms.body + ".... this sms has been saved to server",
+                                    message = sms.body + ".... Saved to server",
                                     timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
                                     status = true,
-                                    fromSim = "Sim 1"
 
-                                ))
+                                    )
+                            )
 
-                            val milisecound = SharedPref.getString(applicationContext,Constants.SHARED_INTERVAL).toInt() * 1000
+                            val milisecound =
+                                SharedPref.getString(applicationContext, Constants.SHARED_INTERVAL)
+                                    .toInt() * 1000
                             SystemClock.sleep(milisecound.toLong())
 
 
@@ -145,10 +147,23 @@ class InternetService : JobIntentService() {
 
 
                         }
+                    } else {
+                        saveActivites(
+                            Activites(
+                                message = sms.body + ".... Failed to server",
+                                timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                                status = true,
+
+                                )
+                        )
                     }
 
                 } catch (e: Throwable) {
-                    Toast.makeText(this@InternetService, ""+e.printStackTrace(), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@InternetService,
+                        "" + e.printStackTrace(),
+                        Toast.LENGTH_SHORT
+                    ).show()
                     Log.d(TAG, "enqueueWork: failed " + e.message)
 
                     val smsNew = sms.apply {
@@ -156,6 +171,15 @@ class InternetService : JobIntentService() {
                     }
 
                     updateSms(smsNew)
+
+                    saveActivites(
+                        Activites(
+                            message = "Something wrong..."+e.message,
+                            timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                            status = true,
+
+                            )
+                    )
                 }
             }
         }
@@ -171,8 +195,8 @@ class InternetService : JobIntentService() {
                 // Display the first 500 characters of the response string.
                 Log.d(TAG, "sendOutgoingSms: " + response.toString())
                 val outsms = Gson().fromJson<OutSms>(response.toString(), OutSms::class.java)
-                Log.d(TAG, "sendOutgoingSms: "+outsms.number)
-                sendSMS(outsms.number,outsms.message,outsms.guid)
+                Log.d(TAG, "sendOutgoingSms: " + outsms.number)
+                sendSMS(outsms.number, outsms.message, outsms.guid)
 
             },
             Response.ErrorListener {
@@ -180,35 +204,32 @@ class InternetService : JobIntentService() {
 
             })
 
-// Add the request to the RequestQueue.
         queue.add(stringRequest)
     }
 
 
-    fun sendSMS(phoneNo: String, msg: String,guid : String) {
+    fun sendSMS(phoneNo: String, msg: String, guid: String) {
         try {
             val smsManager: SmsManager = SmsManager.getDefault()
-            smsManager.sendTextMessage(phoneNo, null, msg+"\n\n GUID : "+guid, null, null)
+            smsManager.sendTextMessage(phoneNo, null, msg + "\n\n GUID : " + guid, null, null)
 
             saveActivites(
                 Activites(
-                    sender_phone = phoneNo ,
-                    message ="[OUT] - > "+ msg + "  GUID $guid .... this message has been send to "+phoneNo,
+                    message = "[OUT] - > " + msg + "  GUID $guid .... this message has been send to " + phoneNo,
                     timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
                     status = true,
-                    fromSim = "Sim 1"
 
-                ))
+                    )
+            )
         } catch (ex: Exception) {
             saveActivites(
                 Activites(
-                    sender_phone = phoneNo ,
-                    message ="[OUT] - > "+ msg + "  GUID $guid .... faild sending  sms to "+phoneNo,
+                    message = "[OUT] - > " + msg + "  GUID $guid .... faild sending  sms to " + phoneNo,
                     timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
                     status = false,
-                    fromSim = "Sim 1"
 
-                ))
+                    )
+            )
 
             ex.printStackTrace()
         }

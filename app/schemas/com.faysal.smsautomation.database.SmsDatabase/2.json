@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "2b987337ff0ca13d3d8e8615d85be922",
+    "identityHash": "3fb2d0bec47d87f1bd3144a253edab95",
     "entities": [
       {
         "tableName": "phone_sms",
@@ -62,19 +62,13 @@
       },
       {
         "tableName": "delivered_sms",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`deliverid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `number` TEXT, `message` TEXT, `timestamp` TEXT, `status` INTEGER, `fromSim` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`activitesId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `message` TEXT, `timestamp` TEXT, `status` INTEGER)",
         "fields": [
           {
-            "fieldPath": "deliverid",
-            "columnName": "deliverid",
+            "fieldPath": "activitesId",
+            "columnName": "activitesId",
             "affinity": "INTEGER",
             "notNull": true
-          },
-          {
-            "fieldPath": "sender_phone",
-            "columnName": "number",
-            "affinity": "TEXT",
-            "notNull": false
           },
           {
             "fieldPath": "message",
@@ -93,17 +87,11 @@
             "columnName": "status",
             "affinity": "INTEGER",
             "notNull": false
-          },
-          {
-            "fieldPath": "fromSim",
-            "columnName": "fromSim",
-            "affinity": "TEXT",
-            "notNull": false
           }
         ],
         "primaryKey": {
           "columnNames": [
-            "deliverid"
+            "activitesId"
           ],
           "autoGenerate": true
         },
@@ -114,7 +102,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2b987337ff0ca13d3d8e8615d85be922')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3fb2d0bec47d87f1bd3144a253edab95')"
     ]
   }
 }

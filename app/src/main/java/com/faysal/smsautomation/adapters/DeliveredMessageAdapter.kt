@@ -28,19 +28,8 @@ class DeliveredMessageAdapter : RecyclerView.Adapter<DeliveredMessageAdapter.Del
         }
 
         fun bind(activites : Activites) {
-            title.text = "${activites.message}"+""
-           // ex_note.text = "GUID : "+activites.sender_phone
-            timestamp.text = activites.timestamp+""
+            title.text = "- ${activites.timestamp} - ${activites.message}"+""
 
-            if (activites.status==true){
-                result.text = "SUCCESS"
-                result.setTextColor(Color.parseColor("#20AD26"))
-            }else{
-                result.text = "Failure"
-                result.setTextColor(Color.parseColor("#FF0600"))
-            }
-
-            fromSim.text = activites.fromSim+""
         }
     }
 
