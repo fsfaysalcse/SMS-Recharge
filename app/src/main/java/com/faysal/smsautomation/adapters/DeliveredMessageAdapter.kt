@@ -28,7 +28,7 @@ class DeliveredMessageAdapter : RecyclerView.Adapter<DeliveredMessageAdapter.Del
         }
 
         fun bind(activites : Activites) {
-            title.text = "- ${activites.timestamp} - ${activites.message}"+""
+            title.text = "$${activites.timestamp} - ${activites.message}"+""
 
         }
     }

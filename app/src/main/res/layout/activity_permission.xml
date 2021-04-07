@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/green"
+    android:layout_gravity="center"
+    android:gravity="center"
+    android:padding="16dp"
+    tools:context=".ui.ActivityPermission">
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/montserrat_regular"
+        android:textColor="@color/black"
+        android:textSize="18dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:layout_marginBottom="30dp"
+        android:text="To access this app you need to grant those permissions.So press the allow button to proceed next step "/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/montserrat_regular"
+        android:textColor="@color/green_dark"
+        android:drawableTint="@color/red_dark"
+        android:textSize="18dp"
+        android:drawablePadding="10dp"
+        android:text="READ_PHONE_STATE"
+        android:drawableLeft="@drawable/ic_baseline_done_all_24"/>
+
+<TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/montserrat_regular"
+        android:textColor="@color/green_dark"
+        android:drawableTint="@color/red_dark"
+        android:textSize="18dp"
+        android:drawablePadding="10dp"
+        android:text="READ_SMS"
+        android:drawableLeft="@drawable/ic_baseline_done_all_24"/>
+
+<TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/montserrat_regular"
+        android:textColor="@color/green_dark"
+        android:drawableTint="@color/red_dark"
+        android:textSize="18dp"
+        android:drawablePadding="10dp"
+        android:text="RECEIVE_SMS"
+        android:drawableLeft="@drawable/ic_baseline_done_all_24"/>
+
+<TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/montserrat_regular"
+        android:textColor="@color/green_dark"
+        android:drawableTint="@color/red_dark"
+        android:textSize="18dp"
+        android:drawablePadding="10dp"
+        android:text="READ_EXTERNAL_STORAGE"
+        android:drawableLeft="@drawable/ic_baseline_done_all_24"/>
+
+<TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/montserrat_regular"
+        android:textColor="@color/green_dark"
+        android:drawableTint="@color/red_dark"
+        android:textSize="18dp"
+        android:drawablePadding="10dp"
+        android:text="WRITE_EXTERNAL_STORAGE"
+        android:drawableLeft="@drawable/ic_baseline_done_all_24"/>
+
+    <Button
+        android:id="@+id/allowBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Allow"
+        android:layout_marginTop="40dp"
+        android:fontFamily="@font/montserrat_bold"
+        android:background="@color/green_dark"
+        android:textColor="@color/white"
+        android:textAllCaps="true"/>
+
+
+
+
+
+</LinearLayout>

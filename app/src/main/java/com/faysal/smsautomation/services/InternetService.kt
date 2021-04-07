@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 
@@ -115,8 +116,6 @@ class InternetService : JobIntentService() {
                         if (response.body()?.message == "Success") {
                             deleteSms(sms)
 
-                            Log.d(TAG, "enqueueWork: before save " + sms.body)
-
                             saveActivites(
                                 Activites(
                                     message = sms.body + ".... Saved to server",
@@ -126,10 +125,11 @@ class InternetService : JobIntentService() {
                                     )
                             )
 
-                            val milisecound =
+                            val interval =
                                 SharedPref.getString(applicationContext, Constants.SHARED_INTERVAL)
-                                    .toInt() * 1000
-                            SystemClock.sleep(milisecound.toLong())
+                                    .toInt()
+                            val milliseconds: Long = TimeUnit.SECONDS.toMillis(interval.toLong())
+                            SystemClock.sleep(milliseconds)
 
 
                             if (outgoingResponse.isSuccessful) {
@@ -150,7 +150,7 @@ class InternetService : JobIntentService() {
                     } else {
                         saveActivites(
                             Activites(
-                                message = sms.body + ".... Failed to server",
+                                message = sms.body + ".... Failed to Server",
                                 timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
                                 status = true,
 
@@ -159,12 +159,7 @@ class InternetService : JobIntentService() {
                     }
 
                 } catch (e: Throwable) {
-                    Toast.makeText(
-                        this@InternetService,
-                        "" + e.printStackTrace(),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    Log.d(TAG, "enqueueWork: failed " + e.message)
+
 
                     val smsNew = sms.apply {
                         processRunning = false
@@ -174,7 +169,7 @@ class InternetService : JobIntentService() {
 
                     saveActivites(
                         Activites(
-                            message = "Something wrong..."+e.message,
+                            message = "Something wrong..." + e.message,
                             timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
                             status = true,
 

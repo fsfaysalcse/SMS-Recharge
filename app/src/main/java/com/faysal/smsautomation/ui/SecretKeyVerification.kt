@@ -1,9 +1,10 @@
-package com.faysal.smsautomation
+package com.faysal.smsautomation.ui
 
 import android.app.AlertDialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.faysal.smsautomation.util.Util
 import com.faysal.smsautomation.databinding.ActivitySecretKeyVerificationBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
@@ -33,9 +34,19 @@ class SecretKeyVerification : AppCompatActivity() {
 
 
             val verificationCode = binding.etVerificationCode.text.toString().trim()
+
+
+            if (Util.isOnline(this) == false) {
+                Util.showAlertMessage(
+                    applicationContext,
+                    "Internet connection not found !"
+                )
+                return@setOnClickListener
+            }
+
             if (verificationCode.isNullOrEmpty()) {
                 Util.showAlertMessage(
-                    binding.root,
+                    applicationContext,
                     "Please enter verification code."
                 )
                 return@setOnClickListener
@@ -46,6 +57,8 @@ class SecretKeyVerification : AppCompatActivity() {
                     .setCancelable(false)
                     .build()
             dialog.show()
+
+
             GlobalScope.launch {
                 supervisorScope {
                     try {
@@ -73,7 +86,7 @@ class SecretKeyVerification : AppCompatActivity() {
                                 finish()
                             }else {
                                 Util.showAlertMessage(
-                                    binding.root,
+                                    applicationContext,
                                     "Invalid Verification Code"
                                 )
                             }
@@ -84,7 +97,7 @@ class SecretKeyVerification : AppCompatActivity() {
                     } catch (e: Exception) {
                         dialog.dismiss()
                         Util.showAlertMessage(
-                            binding.root,
+                            applicationContext,
                             e.message.toString()
                         )
                     }

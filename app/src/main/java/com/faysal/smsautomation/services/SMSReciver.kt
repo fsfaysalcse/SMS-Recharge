@@ -23,6 +23,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class SMSReciver : BroadcastReceiver() {
@@ -126,9 +127,14 @@ class SMSReciver : BroadcastReceiver() {
                         "prepareForBackgroundService: " + sms.body + " ---> " + sms.processRunning
                     )
                     sendSmsToBackgroundService(sms)
-                    val milisecound =
-                        SharedPref.getString(context, Constants.SHARED_INTERVAL).toInt() * 1000
-                    SystemClock.sleep(milisecound.toLong())
+
+                    Log.d(TAG, "prepareForBackgroundService: Before")
+
+                    val interval = SharedPref.getString(context, Constants.SHARED_INTERVAL).toInt()
+                    val milliseconds: Long = TimeUnit.SECONDS.toMillis(interval.toLong())
+                    SystemClock.sleep(milliseconds)
+
+                    Log.d(TAG, "prepareForBackgroundService: After")
                 }
             }
         }

@@ -1,10 +1,10 @@
-package com.faysal.smsautomation
+package com.faysal.smsautomation.ui
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
+import com.faysal.smsautomation.R
 import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
 
@@ -18,15 +18,16 @@ class SplashScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash_screen)
 
-        val isLogedIn = SharedPref.getBoolean(applicationContext,Constants.IS_LOGED_IN)
+        val isLoggedIn = SharedPref.getBoolean(applicationContext,Constants.IS_LOGED_IN)
+        val isPermissionGranted = SharedPref.getBoolean(applicationContext,Constants.PERMISSION_GRANTED)
 
 
         Handler().postDelayed(Runnable {
-            if (isLogedIn){
+            if (isLoggedIn && isPermissionGranted){
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             }else{
-                startActivity(Intent(this, AcitivtyVerifiy::class.java))
+                startActivity(Intent(this, ActivityPermission::class.java))
                 finish()
             }
 

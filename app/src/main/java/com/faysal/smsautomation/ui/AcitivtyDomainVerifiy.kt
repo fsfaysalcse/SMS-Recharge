@@ -1,9 +1,11 @@
-package com.faysal.smsautomation
+package com.faysal.smsautomation.ui
 
 import android.app.AlertDialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.faysal.smsautomation.util.Util
+import com.faysal.smsautomation.util.Util.isUrlValid
 import com.faysal.smsautomation.databinding.AcitivtyDomainVerificationBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
@@ -14,10 +16,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import retrofit2.Retrofit
 import java.lang.Exception
 
-class AcitivtyVerifiy : AppCompatActivity() {
+class AcitivtyDomainVerifiy : AppCompatActivity() {
 
 
     lateinit var binding: AcitivtyDomainVerificationBinding
@@ -34,34 +35,53 @@ class AcitivtyVerifiy : AppCompatActivity() {
         binding.btnSave.setOnClickListener {
 
             val domainName = binding.etDomainName.text.toString().trim()
+
+            if (Util.isOnline(this) == false) {
+                Util.showAlertMessage(
+                    applicationContext,
+                    "Internet connection not found !"
+                )
+                return@setOnClickListener
+            }
+
             if (domainName.isNullOrEmpty()) {
                 Util.showAlertMessage(
-                    binding.root,
+                    applicationContext,
                     "Please enter domain name."
                 )
                 return@setOnClickListener
             }
 
+
+
+
             var dialog: AlertDialog =
-                SpotsDialog.Builder().setContext(this).setMessage("PLEASE WAIT").setCancelable(false)
+                SpotsDialog.Builder().setContext(this).setMessage("PLEASE WAIT")
+                    .setCancelable(false)
                     .build()
             dialog.show()
-            GlobalScope.launch{
+
+
+            GlobalScope.launch {
                 supervisorScope {
                     try {
                         val responseDomain = async { api2Service.getDomainInfo(domainName) }.await()
                         if (responseDomain.isSuccessful) {
                             if (responseDomain.body()?.status == "1") {
-                                SharedPref.putString(applicationContext, Constants.SHARED_DOMAIN_NAME, domainName)
+                                SharedPref.putString(
+                                    applicationContext,
+                                    Constants.SHARED_DOMAIN_NAME,
+                                    domainName
+                                )
                                 startActivity(
                                     Intent(
-                                        this@AcitivtyVerifiy,
+                                        this@AcitivtyDomainVerifiy,
                                         SecretKeyVerification::class.java
                                     )
                                 )
                             } else {
                                 Util.showAlertMessage(
-                                    binding.root,
+                                    applicationContext,
                                     "Invalid Domain"
                                 )
 
@@ -72,7 +92,7 @@ class AcitivtyVerifiy : AppCompatActivity() {
                     } catch (e: Exception) {
                         dialog.dismiss()
                         Util.showAlertMessage(
-                            binding.root,
+                            applicationContext,
                             e.message.toString()
                         )
                     }

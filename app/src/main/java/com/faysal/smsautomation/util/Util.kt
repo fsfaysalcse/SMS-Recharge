@@ -1,7 +1,8 @@
-package com.faysal.smsautomation
+package com.faysal.smsautomation.util
 
-import android.app.ProgressDialog
+import android.R
 import android.content.Context
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
@@ -9,17 +10,19 @@ import android.text.TextUtils
 import android.util.Patterns
 import android.view.View
 import android.webkit.URLUtil
+import android.widget.TextView
+import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
+import es.dmoral.toasty.Toasty
 
 
 object Util {
-    private var loading : ProgressDialog? = null
-    fun showAlertMessage(view: View, message: String) {
-        Snackbar.make(
-            view,
-            message,
-            Snackbar.LENGTH_LONG
-        ).show()
+    fun showAlertMessage(context: Context, message: String) {
+        Toasty.info(context, message, Toast.LENGTH_SHORT, true).show();
+    }
+
+    fun showSuccessMessage(context: Context, message: String) {
+        Toasty.success(context, message, Toast.LENGTH_SHORT, true).show();
     }
 
     fun String.isEmailValid(): Boolean {
@@ -40,7 +43,8 @@ object Util {
                 val nc = cm.getNetworkCapabilities(n)
                 //It will check for both wifi and cellular network
                 return nc!!.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || nc.hasTransport(
-                    NetworkCapabilities.TRANSPORT_WIFI)
+                    NetworkCapabilities.TRANSPORT_WIFI
+                )
             }
             return false
         } else {

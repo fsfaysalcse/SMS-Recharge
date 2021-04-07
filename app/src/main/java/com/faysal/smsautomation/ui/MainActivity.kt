@@ -1,11 +1,9 @@
-package com.faysal.smsautomation
+package com.faysal.smsautomation.ui
 
 import android.Manifest
 import android.Manifest.permission.*
 import android.R
-import android.annotation.TargetApi
 import android.app.AlertDialog
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,12 +11,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.Telephony
 import android.telephony.SmsManager
-import android.telephony.SubscriptionInfo
-import android.telephony.SubscriptionManager
-import android.util.Log
-import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +25,7 @@ import com.faysal.smsautomation.Models.Company
 import com.faysal.smsautomation.Models.Interval
 import com.faysal.smsautomation.Models.Notice
 import com.faysal.smsautomation.Models.Service
+import com.faysal.smsautomation.util.Util
 import com.faysal.smsautomation.adapters.DeliveredMessageAdapter
 import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
@@ -52,9 +46,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var isAbaleToStartService: Boolean = false
-    private val PERMISSION_REQUEST_CODE = 200
     lateinit var binding: ActivityMainBinding
-    private var isPermissionGranted = false
     lateinit var apiService: ApiService
     lateinit var api2Service: ApiService
 
@@ -69,7 +61,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initDependency()
-        providePermission()
         setUpViewsWithData()
 
 
@@ -78,33 +69,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun sendSMS(phoneNo: String, msg: String) {
-        try {
-            val smsManager: SmsManager = SmsManager.getDefault()
-            smsManager.sendTextMessage(phoneNo, null, msg, null, null)
-            Toast.makeText(
-                applicationContext, "Message Sent",
-                Toast.LENGTH_LONG
-            ).show()
-        } catch (ex: Exception) {
-            Toast.makeText(
-                applicationContext, ex.message.toString(),
-                Toast.LENGTH_LONG
-            ).show()
-            ex.printStackTrace()
-        }
-    }
-
-    private fun deleteSMS(): Boolean {
-        var isDeleted = false
-        isDeleted = try {
-            contentResolver.delete(Uri.parse("content://sms/"), null, null)
-            true
-        } catch (ex: java.lang.Exception) {
-            false
-        }
-        return isDeleted
-    }
 
     private fun initDependency() {
         apiService = NetworkBuilder.getApiService()
@@ -152,70 +116,60 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        binding.btnSave.setOnClickListener {
-            saveOperation()
-        }
 
         binding.btnReset.setOnClickListener {
             SharedPref.clearSharedPreferences(this)
-            startActivity(Intent(this,SplashScreen::class.java))
+            startActivity(Intent(this, SplashScreen::class.java))
             finish()
         }
 
         binding.btnStart.setOnClickListener {
 
-            val service = SharedPref.getBoolean(this, Constants.BACKGROUND_SERVVICE)
+            startOperation()
 
-            if (!service) {
-                if (isAbaleToStartService) {
-                    Util.showAlertMessage(binding.root, "Background service started successfully.")
-                    SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
-                    binding.btnStart.apply {
-                        text = "Stop"
-                        setBackgroundColor(Color.parseColor("#E53935"))
-                    }
-
-                } else {
-                    showErrorMessageOKCancel("Press the save button before start background service")
-                }
-            } else {
-                SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, false)
-                Util.showAlertMessage(binding.root, "Background Service has been stopped ")
-                binding.btnStart.apply {
-                    text = "Start"
-                    setBackgroundColor(Color.parseColor("#20AD26"))
-                }
-
-            }
 
 
         }
     }
 
-    private fun saveOperation() {
+    private fun startOperation() {
+        val background_service = SharedPref.getBoolean(this, Constants.BACKGROUND_SERVVICE)
+
+        if (background_service){
+            SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, false)
+            Util.showAlertMessage(applicationContext, "Background Service has been stopped ")
+            binding.btnStart.apply {
+                text = "Start"
+                setBackgroundColor(Color.parseColor("#20AD26"))
+            }
+            return
+        }
+
+
         if (!Util.isOnline(this)) {
             showErrorMessageOKCancel("Internet connection failed ! ")
             return
         }
 
 
-        val service = binding.tvService.selectedItem?.toString()
+        val service = binding.tvService.selectedItem.toString()
         val interval = binding.tvInterval.text.toString().trim()
 
 
 
         if (service.isNullOrEmpty()) {
             Util.showAlertMessage(
-                binding.root,
-                "Invalid service amount"
+                applicationContext,
+                "Invalid service !"
             )
             return
         }
 
         if (interval.isNullOrEmpty()) {
-            Util.showAlertMessage(binding.root, "Invalid interval amount")
+            Util.showAlertMessage(applicationContext, "Invalid interval !")
             return
         }
+
 
 
 
@@ -225,16 +179,13 @@ class MainActivity : AppCompatActivity() {
         SharedPref.putBoolean(this, Constants.SHARED_SIM_1_ACTIVE, true)
         SharedPref.putBoolean(this, Constants.SHARED_SIM_2_ACTIVE, true)
 
+        Util.showSuccessMessage(applicationContext, "Background service started successfully.")
+        SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
 
-        isAbaleToStartService = true
-
-        Util.showAlertMessage(binding.root, "All the form information saved successfully")
-
-
-        /*  if (!domainName.isUrlValid()){
-              Util.showAlertMessage(binding.root,"Invalid domain name.")
-          }*/
-
+        binding.btnStart.apply {
+            text = "Stop"
+            setBackgroundColor(Color.parseColor("#E53935"))
+        }
 
     }
 
@@ -270,8 +221,7 @@ class MainActivity : AppCompatActivity() {
 
                 } catch (e: Throwable) {
                     withContext(Dispatchers.Main) {
-                        Snackbar.make(binding.root, e.message.toString(), Snackbar.LENGTH_LONG)
-                            .show()
+                        Util.showAlertMessage(applicationContext,e.message.toString())
                         dialog.dismiss()
                     }
                 }
@@ -352,87 +302,8 @@ class MainActivity : AppCompatActivity() {
         }*/
     }
 
-    private fun providePermission() {
 
-        if (!checkPermission()) {
-            requestPermission();
-        } else {
-            isPermissionGranted = true
-        }
-    }
 
-    private fun checkPermission(): Boolean {
-        val result =
-            ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.READ_SMS)
-        val result1 =
-            ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.SEND_SMS)
-        val result2 =
-            ContextCompat.checkSelfPermission(
-                applicationContext,
-                Manifest.permission.READ_PHONE_STATE
-            )
-        val result3 =
-            ContextCompat.checkSelfPermission(
-                applicationContext,
-                Manifest.permission.RECEIVE_SMS
-            )
-        return result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED && result2 == PackageManager.PERMISSION_GRANTED && result3 == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestPermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(READ_SMS, SEND_SMS, READ_PHONE_STATE, RECEIVE_SMS),
-            PERMISSION_REQUEST_CODE
-        )
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        when (requestCode) {
-            PERMISSION_REQUEST_CODE -> if (grantResults.size > 0) {
-                val readSmsAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED
-                val sendSmsAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED
-                val phoneStateAccepted = grantResults[2] == PackageManager.PERMISSION_GRANTED
-                val recivedSmsAccepted = grantResults[3] == PackageManager.PERMISSION_GRANTED
-                if (readSmsAccepted && sendSmsAccepted && phoneStateAccepted && recivedSmsAccepted)
-                    isPermissionGranted = true
-                else {
-                    Snackbar.make(
-                        binding.root,
-                        "Permission Denied, You cannot access this app.",
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if (shouldShowRequestPermissionRationale(ACCESS_FINE_LOCATION)) {
-                            showMessageOKCancel("You need to allow access to both the permissions",
-                                DialogInterface.OnClickListener { dialog, which ->
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        requestPermissions(
-                                            arrayOf(READ_SMS, SEND_SMS),
-                                            PERMISSION_REQUEST_CODE
-                                        )
-                                    }
-                                })
-                            return
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun showMessageOKCancel(message: String, okListener: DialogInterface.OnClickListener) {
-        AlertDialog.Builder(this@MainActivity)
-            .setMessage(message)
-            .setPositiveButton("OK", okListener)
-            .setNegativeButton("Cancel", null)
-            .create()
-            .show()
-    }
 
     private fun showErrorMessageOKCancel(message: String) {
         AlertDialog.Builder(this@MainActivity)
@@ -442,9 +313,10 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    override fun onResume() {
-        super.onResume()
 
+    override fun onDestroy() {
+        super.onDestroy()
+        SharedPref.putBoolean(this,Constants.BACKGROUND_SERVVICE,false)
     }
 
 
