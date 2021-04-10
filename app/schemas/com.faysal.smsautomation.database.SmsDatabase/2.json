@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "3fb2d0bec47d87f1bd3144a253edab95",
+    "identityHash": "31648769d7cd1e56481744f5cc6b9568",
     "entities": [
       {
         "tableName": "phone_sms",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`smsid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sender_phone` TEXT, `receiver_phone` TEXT, `body` TEXT, `thread_id` TEXT, `timestamp` TEXT, `processRunning` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`smsid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sender_phone` TEXT, `receiver_phone` TEXT, `body` TEXT, `timestamp` TEXT, `processRunning` INTEGER)",
         "fields": [
           {
             "fieldPath": "smsid",
@@ -29,12 +29,6 @@
           {
             "fieldPath": "body",
             "columnName": "body",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "thread_id",
-            "columnName": "thread_id",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -102,7 +96,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3fb2d0bec47d87f1bd3144a253edab95')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '31648769d7cd1e56481744f5cc6b9568')"
     ]
   }
 }

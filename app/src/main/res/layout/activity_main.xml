@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/green"
+    android:background="@color/light_blue"
     tools:context=".ui.MainActivity">
 
     <FrameLayout
@@ -120,28 +120,30 @@
 
                 </LinearLayout>
 
+
                 <LinearLayout
                     android:id="@+id/sim1Layout"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:layout_marginTop="10dp"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/tv_sim_1"
+                    <EditText
+                        android:id="@+id/et_sim_1"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
                         android:layout_marginRight="3dp"
-                        android:layout_weight="5"
-                        android:background="@color/grey"
+                        android:layout_weight="8"
+                        android:background="@drawable/et_number_bg"
                         android:fontFamily="@font/montserrat_regular"
                         android:gravity="center"
                         android:padding="5dp"
-                        android:text="Sim 1 No."
-                        android:textColor="@color/black"
-                        android:textColorHint="@color/black" />
+                        android:maxLength="11"
+                        android:hint="Enter SIM 1 No."
+                        android:textColor="@color/dark_grey"
+                        android:textColorHint="@color/dark_grey" />
 
                     <Switch
                         android:id="@+id/switch_sim_1"
@@ -149,15 +151,10 @@
                         android:layout_height="match_parent"
                         android:layout_gravity="right"
                         android:layout_marginLeft="10dp"
+                        android:layout_marginRight="20dp"
                         android:layout_weight="2"
                         android:gravity="center"
-                        android:checked="true"/>
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="3" />
-
+                        android:checked="true" />
 
                 </LinearLayout>
 
@@ -166,23 +163,24 @@
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:layout_marginTop="5dp"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/tv_sim_2"
+                    <EditText
+                        android:id="@+id/et_sim_2"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
                         android:layout_marginRight="3dp"
-                        android:layout_weight="5"
-                        android:background="@color/grey"
+                        android:layout_weight="8"
+                        android:background="@drawable/et_number_bg"
                         android:fontFamily="@font/montserrat_regular"
                         android:gravity="center"
                         android:padding="5dp"
-                        android:text="Sim 2 No."
-                        android:textColor="@color/black"
-                        android:textColorHint="@color/black" />
+                        android:maxLength="11"
+                        android:hint="Enter SIM 2 No."
+                        android:textColor="@color/dark_grey"
+                        android:textColorHint="@color/dark_grey" />
 
                     <Switch
                         android:id="@+id/switch_sim_2"
@@ -190,15 +188,10 @@
                         android:layout_height="match_parent"
                         android:layout_gravity="right"
                         android:layout_marginLeft="10dp"
+                        android:layout_marginRight="20dp"
                         android:layout_weight="2"
                         android:gravity="center"
                         android:checked="true" />
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="3" />
-
 
                 </LinearLayout>
             </LinearLayout>

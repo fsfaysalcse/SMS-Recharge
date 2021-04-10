@@ -20,6 +20,7 @@ import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
 import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
+import com.faysal.smsautomation.util.SimUtil
 import com.google.gson.Gson
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -37,6 +38,8 @@ class InternetService : JobIntentService() {
     lateinit var smsDao: PhoneSmsDao
 
     lateinit var apiService: ApiService
+
+    var isIntentServiceRunning = false
 
 
     companion object {
@@ -59,6 +62,10 @@ class InternetService : JobIntentService() {
 
     override fun onHandleWork(intent: Intent) {
 
+        if(!isIntentServiceRunning) {
+            isIntentServiceRunning = true;
+        }
+
 
         val smsid = intent.getIntExtra("smsid", -1)
         val sender = intent.getStringExtra("sender")
@@ -75,7 +82,6 @@ class InternetService : JobIntentService() {
                 sender,
                 simNo,
                 smsBody,
-                "123",
                 datetime,
                 processRunning = isProcessing
             )
@@ -186,15 +192,16 @@ class InternetService : JobIntentService() {
         val url = reciverInfo
 
         val stringRequest = StringRequest(Request.Method.GET, url,
-            Response.Listener<String> { response ->
+            { response ->
                 // Display the first 500 characters of the response string.
                 Log.d(TAG, "sendOutgoingSms: " + response.toString())
                 val outsms = Gson().fromJson<OutSms>(response.toString(), OutSms::class.java)
                 Log.d(TAG, "sendOutgoingSms: " + outsms.number)
-                sendSMS(outsms.number, outsms.message, outsms.guid)
+                //sendSMS(outsms.number, outsms.message, outsms.guid)
+                SimUtil.sendSMS(outsms.message+" GUID : "+outsms.guid,outsms.number,applicationContext)
 
             },
-            Response.ErrorListener {
+            {
 
 
             })
@@ -202,33 +209,6 @@ class InternetService : JobIntentService() {
         queue.add(stringRequest)
     }
 
-
-    fun sendSMS(phoneNo: String, msg: String, guid: String) {
-        try {
-            val smsManager: SmsManager = SmsManager.getDefault()
-            smsManager.sendTextMessage(phoneNo, null, msg + "\n\n GUID : " + guid, null, null)
-
-            saveActivites(
-                Activites(
-                    message = "[OUT] - > " + msg + "  GUID $guid .... this message has been send to " + phoneNo,
-                    timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
-                    status = true,
-
-                    )
-            )
-        } catch (ex: Exception) {
-            saveActivites(
-                Activites(
-                    message = "[OUT] - > " + msg + "  GUID $guid .... faild sending  sms to " + phoneNo,
-                    timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
-                    status = false,
-
-                    )
-            )
-
-            ex.printStackTrace()
-        }
-    }
 
     fun saveActivites(sms: Activites) {
         GlobalScope.launch {
@@ -252,6 +232,7 @@ class InternetService : JobIntentService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isIntentServiceRunning = false
         Log.d(TAG, "onDestroy")
     }
 

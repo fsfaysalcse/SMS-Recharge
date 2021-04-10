@@ -12,6 +12,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.telephony.SmsManager
+import android.util.Log
+import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +29,8 @@ import com.faysal.smsautomation.Models.Notice
 import com.faysal.smsautomation.Models.Service
 import com.faysal.smsautomation.util.Util
 import com.faysal.smsautomation.adapters.DeliveredMessageAdapter
+import com.faysal.smsautomation.database.PhoneSmsDao
+import com.faysal.smsautomation.database.SmsDatabase
 import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
@@ -54,9 +58,12 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var listAdapter: DeliveredMessageAdapter
 
+    lateinit var smsDao: PhoneSmsDao
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -68,6 +75,8 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
+
 
 
     private fun initDependency() {
@@ -84,8 +93,31 @@ class MainActivity : AppCompatActivity() {
         setUpNetworkViews()
         setUpForButtonClickHandeler()
         setUpForLastsActivites()
+        setUpForSimInfoView()
 
     }
+
+    private fun setUpForSimInfoView(){
+
+        val sim1number = SharedPref.getString(this,Constants.SHARED_SIM_1_NUMBER)
+        val sim2number = SharedPref.getString(this,Constants.SHARED_SIM_2_NUMBER)
+
+        val sim1Switch = SharedPref.getBoolean(this,Constants.SHARED_SIM_1_ACTIVE)
+        val sim2Switch = SharedPref.getBoolean(this,Constants.SHARED_SIM_2_ACTIVE)
+
+        sim1number?.let {
+            binding.etSim1.setText(sim1number)
+        }
+
+        sim2number?.let {
+            binding.etSim2.setText(sim2number)
+        }
+
+        binding.switchSim1.isChecked = sim1Switch
+        binding.switchSim2.isChecked = sim2Switch
+
+    }
+
 
     private fun setUpForLastsActivites() {
         binding.activitesList.apply {
@@ -155,6 +187,13 @@ class MainActivity : AppCompatActivity() {
         val service = binding.tvService.selectedItem.toString()
         val interval = binding.tvInterval.text.toString().trim()
 
+        val sim1number = binding.etSim1.text.toString().trim()
+        val sim2number = binding.etSim2.text.toString().trim()
+
+        val sim1switch = binding.switchSim1.isChecked
+        val sim2switch = binding.switchSim2.isChecked
+
+
 
 
         if (service.isNullOrEmpty()) {
@@ -170,14 +209,33 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        if (sim1number.isNullOrEmpty()){
+            binding.etSim1.error = "Enter sim 1 number"
+            return
+        }
+
+        if (sim2number.isNullOrEmpty()){
+            binding.etSim2.error = "Enter sim 1 number"
+            return
+        }
+
+        if (!sim1switch && !sim2switch ){
+            Util.showAlertMessage(applicationContext, "Please enable a sim before start ")
+            return
+        }
 
 
 
 
         SharedPref.putString(this, Constants.SHARED_INTERVAL, interval)
         SharedPref.putString(this, Constants.SHARED_SERVICE, service)
-        SharedPref.putBoolean(this, Constants.SHARED_SIM_1_ACTIVE, true)
-        SharedPref.putBoolean(this, Constants.SHARED_SIM_2_ACTIVE, true)
+
+
+        SharedPref.putString(this, Constants.SHARED_SIM_1_NUMBER, sim1number)
+        SharedPref.putString(this, Constants.SHARED_SIM_2_NUMBER, sim2number)
+
+        SharedPref.putBoolean(this, Constants.SHARED_SIM_1_ACTIVE, sim1switch)
+        SharedPref.putBoolean(this, Constants.SHARED_SIM_2_ACTIVE, sim2switch)
 
         Util.showSuccessMessage(applicationContext, "Background service started successfully.")
         SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, true)
@@ -317,6 +375,11 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         SharedPref.putBoolean(this,Constants.BACKGROUND_SERVVICE,false)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
 

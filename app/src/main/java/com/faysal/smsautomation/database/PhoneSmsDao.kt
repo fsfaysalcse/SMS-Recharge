@@ -5,8 +5,12 @@ import androidx.room.*
 
 @Dao
 interface PhoneSmsDao {
-    @Query("SELECT * FROM phone_sms WHERE processRunning = 0")
+    @Query("SELECT * FROM phone_sms WHERE processRunning = 0 ORDER BY timestamp DESC")
     suspend fun getAll(): List<PhoneSms>
+
+
+    @Query("SELECT * FROM phone_sms WHERE processRunning = 0")
+    fun getAllSmsByLiveData(): LiveData<List<PhoneSms>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(sms: PhoneSms)

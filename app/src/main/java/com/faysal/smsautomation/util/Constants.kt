@@ -9,6 +9,8 @@ object Constants {
     var SHARED_SERVICE = "shared_service"
     var SHARED_SIM_1_ACTIVE = "shared_sim_1_active"
     var SHARED_SIM_2_ACTIVE = "shared_sim_2_active"
+    var SHARED_SIM_1_NUMBER= "shared_sim_1_number"
+    var SHARED_SIM_2_NUMBER= "shared_sim_2_number"
     var PERMISSION_GRANTED = "permission_granted"
 
     var IS_LOGED_IN = "is_loged_in"

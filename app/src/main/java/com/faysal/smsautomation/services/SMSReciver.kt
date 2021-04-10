@@ -1,17 +1,14 @@
 package com.faysal.smsautomation.services
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.SystemClock
 import android.provider.Telephony
 import android.telephony.TelephonyManager
 import android.util.Log
-import androidx.core.app.ActivityCompat
+import androidx.work.*
 import com.faysal.smsautomation.database.Activites
 import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
@@ -28,11 +25,11 @@ import java.util.concurrent.TimeUnit
 
 class SMSReciver : BroadcastReceiver() {
 
+    private val JOB_GROUP_NAME = "handel_sms_work"
     private val SMS_RECEIVED: String = "android.provider.Telephony.SMS_RECEIVED"
     private val TAG = "SMSBroadcastReceiver"
     lateinit var smsDao: PhoneSmsDao
     lateinit var database: SmsDatabase
-
     lateinit var context: Context
 
 
@@ -71,7 +68,6 @@ class SMSReciver : BroadcastReceiver() {
                                 sender_phone = message.originatingAddress,
                                 receiver_phone = phoneNumber,
                                 body = message.displayMessageBody,
-                                thread_id = "34543",
                                 timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
                                 processRunning = false
                             )
@@ -84,9 +80,8 @@ class SMSReciver : BroadcastReceiver() {
                                 status = true
                             )
                         )
-
-
                         prepareForBackgroundService()
+
                     }
 
                 }
@@ -97,11 +92,10 @@ class SMSReciver : BroadcastReceiver() {
 
 
     fun saveActivites(activites: Activites) {
-
+        val daos = SmsDatabase.getInstance(context).phoneSmsDao()
         GlobalScope.launch {
             try {
-                smsDao.saveDeliveredMessage(activites)
-                Log.d(TAG, "insertDelivered: saved succesfully")
+                daos.saveDeliveredMessage(activites)
             } catch (e: Exception) {
                 Log.d(TAG, "Failed  " + e.message)
             }
@@ -111,30 +105,19 @@ class SMSReciver : BroadcastReceiver() {
 
     private fun prepareForBackgroundService() {
 
-        smsDao = database.phoneSmsDao()
+       val daos = SmsDatabase.getInstance(context).phoneSmsDao()
 
-        var listedDataJob = GlobalScope.async { smsDao.getAll() }
-        listedDataJob.invokeOnCompletion {cause ->
+        var listedDataJob = GlobalScope.async { daos.getAll() }
+        listedDataJob.invokeOnCompletion { cause ->
             if (cause != null) {
                 //something happened and the job didn't finish successfully.  Handle that here
                 Unit
             } else {
                 val myData = listedDataJob.getCompleted()
-                Log.d(TAG, "prepareForBackgroundService:test "+myData.size)
                 myData.forEach { sms ->
-                    Log.d(
-                        TAG,
-                        "prepareForBackgroundService: " + sms.body + " ---> " + sms.processRunning
-                    )
+
                     sendSmsToBackgroundService(sms)
 
-                    Log.d(TAG, "prepareForBackgroundService: Before")
-
-                    val interval = SharedPref.getString(context, Constants.SHARED_INTERVAL).toInt()
-                    val milliseconds: Long = TimeUnit.SECONDS.toMillis(interval.toLong())
-                    SystemClock.sleep(milliseconds)
-
-                    Log.d(TAG, "prepareForBackgroundService: After")
                 }
             }
         }
@@ -144,29 +127,47 @@ class SMSReciver : BroadcastReceiver() {
 
 
     private fun sendSmsToBackgroundService(sms: PhoneSms) {
-        val serviceIntent = Intent(context, InternetService::class.java).apply {
-            putExtra("smsid", sms.smsid)
-            putExtra("simNo", sms.receiver_phone)
-            putExtra("sender", sms.sender_phone)
-            putExtra("datetime", sms.timestamp)
-            putExtra("smsBody", sms.body)
-            putExtra("isProcessing", true)
-        }
+
+        val interval = SharedPref.getString(context,Constants.SHARED_INTERVAL).toLong()
+
+
+        val datas =  Data.Builder().apply {
+            putInt("smsid", sms.smsid)
+            putString("simNo", sms.receiver_phone)
+            putString("sender", sms.sender_phone)
+            putString("datetime", sms.timestamp)
+            putString("smsBody", sms.body)
+        }.build()
+
+
+
+        val  workRequest : OneTimeWorkRequest = OneTimeWorkRequest.Builder(HandlerSMSWork::class.java)
+                .setInitialDelay(interval,TimeUnit.SECONDS)
+                .setInputData(datas)
+                .build()
+
+        val workManager : WorkManager = WorkManager.getInstance(context);
+        var work : WorkContinuation = workManager.beginUniqueWork(
+            JOB_GROUP_NAME,
+            ExistingWorkPolicy.APPEND,
+            workRequest
+        );
+        work.enqueue();
 
         val smsNew = sms.apply {
             processRunning = true
         }
 
         updateSms(smsNew)
-        InternetService.enqueueWork(context, serviceIntent)
 
     }
 
 
     fun insertSms(sms: PhoneSms) {
+        val daos = SmsDatabase.getInstance(context).phoneSmsDao()
         GlobalScope.launch {
             try {
-                smsDao.insert(sms)
+                daos.insert(sms)
                 Log.d(TAG, "SMS added successfully")
             } catch (e: Exception) {
                 Log.d(TAG, "Failed to insert data into room" + e.message)
@@ -175,9 +176,10 @@ class SMSReciver : BroadcastReceiver() {
     }
 
     fun updateSms(sms: PhoneSms) {
+        val daos = SmsDatabase.getInstance(context).phoneSmsDao()
         GlobalScope.launch {
             try {
-                smsDao.update(sms)
+                daos.update(sms)
                 Log.d(TAG, "SMS update successfully")
             } catch (e: Exception) {
                 Log.d(TAG, "Failed to update data into room")

@@ -18,7 +18,7 @@ public class SharedPref {
 
     public static String getString(Context contextGetKey, String Key) {
         sharedPreferences = contextGetKey.getSharedPreferences("Cache", Context.MODE_PRIVATE);
-        String Value = sharedPreferences.getString(Key, "null");
+        String Value = sharedPreferences.getString(Key, null);
         return Value;
 
     }

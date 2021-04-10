@@ -10,7 +10,6 @@ data class PhoneSms(
     @ColumnInfo(name = "sender_phone") val sender_phone: String?,
     @ColumnInfo(name = "receiver_phone") val receiver_phone: String?,
     @ColumnInfo(name = "body") val body: String?,
-    @ColumnInfo(name = "thread_id") val thread_id: String?,
     @ColumnInfo(name = "timestamp") val timestamp: String?,
     @ColumnInfo(name = "processRunning") var processRunning: Boolean?
 
