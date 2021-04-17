@@ -226,7 +226,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
         SharedPref.putString(this, Constants.SHARED_INTERVAL, interval)
         SharedPref.putString(this, Constants.SHARED_SERVICE, service)
 

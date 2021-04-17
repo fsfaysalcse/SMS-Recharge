@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "728489144967",
+    "project_id": "rcharge-app",
+    "storage_bucket": "rcharge-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:728489144967:android:daa3178b3143b66034be22",
+        "android_client_info": {
+          "package_name": "com.faysal.smsautomation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "728489144967-sugiqi9jstuaere9pdlorh7q9loa2fgn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGmNoyuc9EyJTBeiF_OG1__xukll3zHfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "728489144967-sugiqi9jstuaere9pdlorh7q9loa2fgn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

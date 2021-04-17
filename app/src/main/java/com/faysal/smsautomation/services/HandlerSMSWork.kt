@@ -92,10 +92,13 @@ class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
 
                             val responseBody = outgoingResponse.body()
                             if (responseBody?.size!! > 0) {
-                                val reciverInfo = responseBody?.get(0)?.url
-                                if (!reciverInfo.isNullOrEmpty()) {
-                                    sendOutgoingSms(reciverInfo)
+
+                                responseBody.forEach {
+                                    it.url?.let {
+                                        sendOutgoingSms(it)
+                                    }
                                 }
+
                             }
                         }
 

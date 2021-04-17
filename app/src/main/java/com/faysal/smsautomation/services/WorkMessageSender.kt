@@ -41,8 +41,14 @@ class WorkMessageSender(context: Context, workerParams: WorkerParameters) : Work
             { response ->
                 // Display the first 500 characters of the response string.
                 Log.d(InternetService.TAG, "sendOutgoingSms: " + response.toString())
-                val outsms = Gson().fromJson<OutSms>(response.toString(), OutSms::class.java)
+                var outsms = Gson().fromJson<OutSms>(response.toString(), OutSms::class.java)
                 Log.d(InternetService.TAG, "sendOutgoingSms: " + outsms.number)
+
+
+
+                if (outsms.guid.isNullOrEmpty()) outsms.guid = ""
+                if (outsms.message.isNullOrEmpty()) outsms.message = ""
+                if (outsms.number.isNullOrEmpty()) outsms.number = ""
 
                 try {
                     val result = SimUtil.sendSMS(outsms.message+" GUID : "+outsms.guid,outsms.number,applicationContext)
