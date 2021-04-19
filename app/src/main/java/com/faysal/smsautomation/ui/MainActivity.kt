@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun initDependency() {
-        apiService = NetworkBuilder.getApiService()
+        apiService = NetworkBuilder.getApiService(applicationContext)
         api2Service = NetworkBuilder.getAnotherApiService()
         smsViewModel = ViewModelProviders.of(this).get(SMSViewModel::class.java)
         listAdapter = DeliveredMessageAdapter()

@@ -27,14 +27,14 @@ class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
 
 
     private val JOB_GROUP_NAME: String = "outgoing_message_operation"
-    lateinit var smsDao: PhoneSmsDao
-    lateinit var apiService: ApiService
+     var smsDao: PhoneSmsDao
+     var apiService: ApiService
 
     private var result = Result.success()
 
     init {
         smsDao = SmsDatabase.getInstance(context).phoneSmsDao()
-        apiService = NetworkBuilder.getApiService()
+        apiService = NetworkBuilder.getApiService(applicationContext)
     }
 
 
@@ -93,10 +93,12 @@ class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
                             val responseBody = outgoingResponse.body()
                             if (responseBody?.size!! > 0) {
 
+
                                 responseBody.forEach {
-                                    it.url?.let {
+                                    it.url.let {
                                         sendOutgoingSms(it)
                                     }
+
                                 }
 
                             }
@@ -141,6 +143,8 @@ class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
                 }
             }
         }
+
+
 
         return result
     }
@@ -199,5 +203,8 @@ class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
         }
     }
 
+    override fun onStopped() {
+        super.onStopped()
+    }
 
 }

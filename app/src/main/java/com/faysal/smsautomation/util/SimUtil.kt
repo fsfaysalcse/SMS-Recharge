@@ -1,10 +1,13 @@
 package com.faysal.smsautomation.util
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.telephony.SmsManager
 import android.util.Log
 import androidx.annotation.RequiresApi
+
 
 object SimUtil {
     private const val TAG = "SimUtil"
@@ -46,6 +49,5 @@ object SimUtil {
             return false
         }
     }
-
 
 }

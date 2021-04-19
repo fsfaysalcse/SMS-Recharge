@@ -52,9 +52,10 @@
             </intent-filter>
         </receiver>
         -->
-        <service
+    <!--    <service
             android:name=".services.InternetService"
-            android:permission="android.permission.BIND_JOB_SERVICE" /> <!-- Activity that allows the user to send new SMS/MMS messages -->
+            android:permission="android.permission.BIND_JOB_SERVICE" /> -->
+        <!-- Activity that allows the user to send new SMS/MMS messages -->
         <!-- BroadcastReceiver for incoming SMS -->
         <receiver
             android:name=".services.SMSReciver"
@@ -64,6 +65,7 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
     </application>
 
 </manifest>

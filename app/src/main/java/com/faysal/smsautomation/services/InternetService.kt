@@ -22,10 +22,7 @@ import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
 import com.faysal.smsautomation.util.SimUtil
 import com.google.gson.Gson
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -34,7 +31,6 @@ import kotlin.random.Random
 
 class InternetService : JobIntentService() {
 
-    lateinit var service: ApiService
     lateinit var smsDao: PhoneSmsDao
 
     lateinit var apiService: ApiService
@@ -54,9 +50,8 @@ class InternetService : JobIntentService() {
 
     override fun onCreate() {
         super.onCreate()
-        service = NetworkBuilder.getApiService();
         smsDao = SmsDatabase.getInstance(application).phoneSmsDao()
-        apiService = NetworkBuilder.getApiService()
+        apiService = NetworkBuilder.getApiService(applicationContext)
     }
 
 
@@ -101,7 +96,7 @@ class InternetService : JobIntentService() {
         )
 
 
-        GlobalScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             supervisorScope {
                 try {
                     val response = async {
@@ -142,7 +137,7 @@ class InternetService : JobIntentService() {
                                 val responseBody = outgoingResponse.body()
 
                                 if (responseBody?.size!! > 0) {
-                                    val reciverInfo = responseBody?.get(0)?.url
+                                    val reciverInfo = responseBody.get(0).url
                                     if (!reciverInfo.isNullOrEmpty()) {
                                         sendOutgoingSms(reciverInfo)
                                     }

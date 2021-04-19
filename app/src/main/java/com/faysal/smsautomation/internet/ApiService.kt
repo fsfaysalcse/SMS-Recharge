@@ -7,6 +7,7 @@ import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.http.Url
 
 interface ApiService {
 
@@ -38,6 +39,9 @@ interface ApiService {
     suspend fun getVerificationCodeInfo(
         @Query("verificationCode") verificationCode : String
     ) : Response<Verification>
+
+    @GET
+    suspend fun getOutSms(@Url url: String) : Response<OutSms>
 
 
 

@@ -34,6 +34,7 @@ class ActivityPermission : AppCompatActivity() {
         }
 
 
+
     }
 
     private fun permissionOperation() {

@@ -2,6 +2,7 @@ package com.faysal.smsautomation.services
 
 import android.content.Context
 import android.util.Log
+import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.android.volley.Request
@@ -11,10 +12,17 @@ import com.android.volley.toolbox.Volley
 import com.faysal.smsautomation.Models.OutSms
 import com.faysal.smsautomation.database.Activites
 import com.faysal.smsautomation.database.SmsDatabase
+import com.faysal.smsautomation.internet.ApiService
+import com.faysal.smsautomation.internet.NetworkBuilder
+import com.faysal.smsautomation.util.Constants
+import com.faysal.smsautomation.util.SendUtil
+import com.faysal.smsautomation.util.SharedPref
 import com.faysal.smsautomation.util.SimUtil
+import com.faysal.smsautomation.util.SimUtil.sendSMS
 import com.google.gson.Gson
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import retrofit2.Call
+import retrofit2.Callback
 import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
@@ -26,7 +34,16 @@ class WorkMessageSender(context: Context, workerParams: WorkerParameters) : Work
 
     private var result = Result.success()
 
+    private lateinit var apiservice : ApiService
+
     override fun doWork(): Result {
+
+        val background_service = SharedPref.getBoolean(applicationContext, Constants.BACKGROUND_SERVVICE)
+        if (!background_service) {
+            return Result.success()
+        }
+
+
 
 
         val messageUrl = inputData.getString("messageUrl")
@@ -35,7 +52,52 @@ class WorkMessageSender(context: Context, workerParams: WorkerParameters) : Work
             return Result.failure()
         }
 
-        val queue = Volley.newRequestQueue(applicationContext)
+        apiservice = NetworkBuilder.getApiService(applicationContext)
+
+
+       CoroutineScope(Dispatchers.IO).launch {
+            supervisorScope {
+                try {
+                    val response = async { apiservice.getOutSms(messageUrl)}.await()
+                    if (response.isSuccessful){
+                        response.body()?.let { outsms ->
+                            if (outsms.guid.isNullOrEmpty()) outsms.guid = ""
+                            if (outsms.message.isNullOrEmpty()) outsms.message = ""
+                            if (outsms.number.isNullOrEmpty()) outsms.number = ""
+
+                            Log.d(TAG, "doWork: "+response.body().toString())
+
+                            val result = SimUtil.sendSMS(outsms.number,"${outsms.message}",applicationContext)
+                            if (result){
+                                saveActivites(
+                                    Activites(
+                                        message = "${outsms.message} - outgoing message has send",
+                                        status = true,
+                                        timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
+                                    ))
+                            }else{
+                                saveActivites(
+                                    Activites(
+                                        message = "${outsms.message} - outgoing message sending failed",
+                                        status = false,
+                                        timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
+                                    ))
+                            }
+                        }
+                    }
+
+                    result = Result.success()
+
+                }catch (e : Exception){
+                    Log.d(TAG, "doWork: Failed something wrong")
+                    result = Result.failure()
+                }
+            }
+
+        }
+
+
+       /* val queue = Volley.newRequestQueue(applicationContext)
         val stringRequest = StringRequest(
             Request.Method.GET, messageUrl,
             { response ->
@@ -51,7 +113,7 @@ class WorkMessageSender(context: Context, workerParams: WorkerParameters) : Work
                 if (outsms.number.isNullOrEmpty()) outsms.number = ""
 
                 try {
-                    val result = SimUtil.sendSMS(outsms.message+" GUID : "+outsms.guid,outsms.number,applicationContext)
+                 val result = SimUtil.sendSMS(outsms.number,"${outsms.message}",applicationContext)
                     if (result){
                         saveActivites(
                             Activites(
@@ -77,8 +139,8 @@ class WorkMessageSender(context: Context, workerParams: WorkerParameters) : Work
                 result = Result.failure()
             })
 
-        queue.add(stringRequest)
-        return Result.success()
+        queue.add(stringRequest)*/
+        return result
     }
 
     fun saveActivites(activites: Activites) {

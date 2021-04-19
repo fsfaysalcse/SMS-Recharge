@@ -28,7 +28,7 @@ class SecretKeyVerification : AppCompatActivity() {
         binding = ActivitySecretKeyVerificationBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        apiService = NetworkBuilder.getApiService()
+        apiService = NetworkBuilder.getApiService(applicationContext)
 
         binding.btnSave.setOnClickListener {
 

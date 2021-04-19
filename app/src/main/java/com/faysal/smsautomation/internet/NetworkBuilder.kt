@@ -1,5 +1,8 @@
 package com.faysal.smsautomation.internet
 
+import android.content.Context
+import com.faysal.smsautomation.util.Constants
+import com.faysal.smsautomation.util.SharedPref
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -9,10 +12,17 @@ import java.util.concurrent.TimeUnit
 
 
 object NetworkBuilder {
-    val BASE_URL = "http://server1.eflexi.xyz/"
     val BASE_URL2 = "http://device.dsbpos.com/"
 
-    fun getApiService () : ApiService {
+    fun getApiService (context: Context) : ApiService {
+        var domain = SharedPref.getString(context,Constants.SHARED_DOMAIN_NAME)
+
+        if (domain.isNullOrEmpty()){
+            domain = "http://"+domain+"/"
+        }else{
+            domain = "http://server1.eflexi.xyz/"
+        }
+
 
         val logging = HttpLoggingInterceptor()
         logging.level = HttpLoggingInterceptor.Level.HEADERS
@@ -26,7 +36,7 @@ object NetworkBuilder {
 
 
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(domain)
             .addConverterFactory(GsonConverterFactory.create())
             .client(okHttpClient)
             .build().create(ApiService::class.java)
