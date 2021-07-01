@@ -14,6 +14,8 @@ import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import es.dmoral.toasty.Toasty
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 object Util {
@@ -52,4 +54,6 @@ object Util {
             return netInfo != null && netInfo.isConnectedOrConnecting
         }
     }
+
+    fun currentTimeStamp() = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
 }

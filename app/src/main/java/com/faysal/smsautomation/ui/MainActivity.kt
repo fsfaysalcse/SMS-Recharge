@@ -23,17 +23,21 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.work.*
 import com.faysal.smsautomation.Models.Company
 import com.faysal.smsautomation.Models.Interval
 import com.faysal.smsautomation.Models.Notice
 import com.faysal.smsautomation.Models.Service
 import com.faysal.smsautomation.util.Util
 import com.faysal.smsautomation.adapters.DeliveredMessageAdapter
+import com.faysal.smsautomation.database.Activites
+import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
 import com.faysal.smsautomation.database.SmsDatabase
 import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
+import com.faysal.smsautomation.services.HandlerSMSWork
 import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
 import com.faysal.smsautomation.viewmodel.SMSViewModel
@@ -41,6 +45,10 @@ import com.google.android.material.snackbar.Snackbar
 import dmax.dialog.SpotsDialog
 import kotlinx.coroutines.*
 import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 
 class MainActivity : AppCompatActivity() {
@@ -48,6 +56,8 @@ class MainActivity : AppCompatActivity() {
     companion object {
         val TAG = "MainActivity"
     }
+
+    private val JOB_GROUP_NAME = "handel_sms_work"
 
     private var isAbaleToStartService: Boolean = false
     lateinit var binding: ActivityMainBinding
@@ -80,6 +90,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun initDependency() {
+        smsDao = SmsDatabase.getInstance(this).phoneSmsDao()
         apiService = NetworkBuilder.getApiService(applicationContext)
         api2Service = NetworkBuilder.getAnotherApiService()
         smsViewModel = ViewModelProviders.of(this).get(SMSViewModel::class.java)
@@ -94,8 +105,79 @@ class MainActivity : AppCompatActivity() {
         setUpForButtonClickHandeler()
         setUpForLastsActivites()
         setUpForSimInfoView()
+        setupSmsServerOperation()
 
     }
+
+    private fun setupSmsServerOperation() {
+        smsDao.getAllSmsByLiveData().observe(this, Observer {
+           it.forEach{
+               sendSmsToBackgroundService(it)
+           }
+        })
+    }
+
+
+    private fun sendSmsToBackgroundService(sms: PhoneSms) {
+
+        val interval = SharedPref.getString(this,Constants.SHARED_INTERVAL).toLong()
+
+
+        val datas =  Data.Builder().apply {
+            putInt("smsid", sms.smsid)
+            putString("simNo", sms.receiver_phone)
+            putString("sender", sms.sender_phone)
+            putString("datetime", sms.timestamp)
+            putString("smsBody", sms.body)
+        }.build()
+
+
+
+        val  workRequest : OneTimeWorkRequest = OneTimeWorkRequest.Builder(HandlerSMSWork::class.java)
+            .setInitialDelay(interval,TimeUnit.SECONDS)
+            .setInputData(datas)
+            .build()
+
+        val workManager : WorkManager = WorkManager.getInstance(this);
+        var work : WorkContinuation = workManager.beginUniqueWork(
+            JOB_GROUP_NAME,
+            ExistingWorkPolicy.APPEND,
+            workRequest
+        );
+        work.enqueue();
+
+        val smsNew = sms.apply {
+            processRunning = true
+        }
+
+        updateSms(smsNew)
+
+    }
+
+    fun insertSms(sms: PhoneSms) {
+        val daos = SmsDatabase.getInstance(this).phoneSmsDao()
+        GlobalScope.launch {
+            try {
+                daos.insert(sms)
+                Log.d(TAG, "SMS added successfully")
+            } catch (e: Exception) {
+                Log.d(TAG, "Failed to insert data into room" + e.message)
+            }
+        }
+    }
+
+    fun updateSms(sms: PhoneSms) {
+        val daos = SmsDatabase.getInstance(this).phoneSmsDao()
+        GlobalScope.launch {
+            try {
+                daos.update(sms)
+                Log.d(TAG, "SMS update successfully")
+            } catch (e: Exception) {
+                Log.d(TAG, "Failed to update data into room")
+            }
+        }
+    }
+
 
     private fun setUpForSimInfoView(){
 
@@ -380,6 +462,7 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
+
 
 
 }

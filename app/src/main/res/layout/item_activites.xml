@@ -5,7 +5,6 @@
     android:layout_height="wrap_content"
     android:padding="5dp"
     android:layout_marginBottom="5dp"
-    android:background="@drawable/activites_item_bg"
     android:orientation="vertical">
 
     <TextView
@@ -14,7 +13,7 @@
         android:layout_height="wrap_content"
         android:text=" SMS has been send to this number 334534534"
         android:fontFamily="@font/montserrat_regular"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textSize="10sp"
         android:textColor="@color/black"
         android:textAllCaps="false"/>
 

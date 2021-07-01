@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 
 class SMSReciver : BroadcastReceiver() {
 
-    private val JOB_GROUP_NAME = "handel_sms_work"
+
     private val SMS_RECEIVED: String = "android.provider.Telephony.SMS_RECEIVED"
     private val TAG = "SMSBroadcastReceiver"
     lateinit var smsDao: PhoneSmsDao
@@ -35,8 +35,6 @@ class SMSReciver : BroadcastReceiver() {
 
     @SuppressLint("MissingPermission")
     override fun onReceive(ct: Context, intent: Intent) {
-
-        Log.d(TAG, "onReceive: receive a sms")
         context = ct
         database = SmsDatabase.getInstance(context)
         smsDao = database.phoneSmsDao()
@@ -47,12 +45,9 @@ class SMSReciver : BroadcastReceiver() {
             return
         }
 
-        val telephonyManager =
-            context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
+        val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
 
         val phoneNumber = telephonyManager!!.line1Number
-        Log.d(TAG, "onReceive: " + phoneNumber)
-
         var inSIM = false
 
         if (intent.getAction() != null) {
@@ -80,7 +75,7 @@ class SMSReciver : BroadcastReceiver() {
                                 status = true
                             )
                         )
-                        prepareForBackgroundService()
+
 
                     }
 
@@ -103,64 +98,8 @@ class SMSReciver : BroadcastReceiver() {
     }
 
 
-    private fun prepareForBackgroundService() {
-
-       val daos = SmsDatabase.getInstance(context).phoneSmsDao()
-
-        var listedDataJob = GlobalScope.async { daos.getAll() }
-        listedDataJob.invokeOnCompletion { cause ->
-            if (cause != null) {
-                //something happened and the job didn't finish successfully.  Handle that here
-                Unit
-            } else {
-                val myData = listedDataJob.getCompleted()
-                myData.forEach { sms ->
-
-                    sendSmsToBackgroundService(sms)
-
-                }
-            }
-        }
 
 
-    }
-
-
-    private fun sendSmsToBackgroundService(sms: PhoneSms) {
-
-        val interval = SharedPref.getString(context,Constants.SHARED_INTERVAL).toLong()
-
-
-        val datas =  Data.Builder().apply {
-            putInt("smsid", sms.smsid)
-            putString("simNo", sms.receiver_phone)
-            putString("sender", sms.sender_phone)
-            putString("datetime", sms.timestamp)
-            putString("smsBody", sms.body)
-        }.build()
-
-
-
-        val  workRequest : OneTimeWorkRequest = OneTimeWorkRequest.Builder(HandlerSMSWork::class.java)
-                .setInitialDelay(interval,TimeUnit.SECONDS)
-                .setInputData(datas)
-                .build()
-
-        val workManager : WorkManager = WorkManager.getInstance(context);
-        var work : WorkContinuation = workManager.beginUniqueWork(
-            JOB_GROUP_NAME,
-            ExistingWorkPolicy.APPEND,
-            workRequest
-        );
-        work.enqueue();
-
-        val smsNew = sms.apply {
-            processRunning = true
-        }
-
-        updateSms(smsNew)
-
-    }
 
 
     fun insertSms(sms: PhoneSms) {
@@ -175,15 +114,7 @@ class SMSReciver : BroadcastReceiver() {
         }
     }
 
-    fun updateSms(sms: PhoneSms) {
-        val daos = SmsDatabase.getInstance(context).phoneSmsDao()
-        GlobalScope.launch {
-            try {
-                daos.update(sms)
-                Log.d(TAG, "SMS update successfully")
-            } catch (e: Exception) {
-                Log.d(TAG, "Failed to update data into room")
-            }
-        }
-    }
+
+
+
 }

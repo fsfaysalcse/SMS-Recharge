@@ -12,6 +12,7 @@ interface PhoneSmsDao {
     @Query("SELECT * FROM phone_sms WHERE processRunning = 0")
     fun getAllSmsByLiveData(): LiveData<List<PhoneSms>>
 
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(sms: PhoneSms)
 
