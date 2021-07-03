@@ -236,13 +236,13 @@
             </LinearLayout>
 
             <LinearLayout
-                android:weightSum="5"
+                android:weightSum="7"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
 
                 <LinearLayout
-                    android:layout_weight="4"
+                    android:layout_weight="6"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_marginTop="5dp"
@@ -267,14 +267,22 @@
 
                     <TextView
                         android:id="@+id/tv_notice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/edittext_bg"
-                        android:fontFamily="@font/montserrat_bold"
-                        android:padding="10dp"
-                        android:text="Notice Display"
-                        android:textColor="@color/black" />
-
+                        android:layout_width="fill_parent"
+                        android:layout_height="match_parent"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:paddingLeft="15dip"
+                        android:focusable="true"
+                        android:fadingEdge="horizontal"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:fontFamily="@font/bdfont"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        android:focusableInTouchMode="true"
+                        android:freezesText="true"/>
 
 
                 </LinearLayout>

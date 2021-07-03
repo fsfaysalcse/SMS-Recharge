@@ -1,24 +1,17 @@
 package com.faysal.smsautomation.ui
 
-import android.Manifest
 import android.Manifest.permission.*
 import android.R
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.telephony.SmsManager
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.WindowManager
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.lifecycleScope
@@ -28,7 +21,6 @@ import com.faysal.smsautomation.Models.Company
 import com.faysal.smsautomation.Models.Interval
 import com.faysal.smsautomation.Models.Notice
 import com.faysal.smsautomation.Models.Service
-import com.faysal.smsautomation.util.Util
 import com.faysal.smsautomation.adapters.DeliveredMessageAdapter
 import com.faysal.smsautomation.database.Activites
 import com.faysal.smsautomation.database.PhoneSms
@@ -38,10 +30,11 @@ import com.faysal.smsautomation.databinding.ActivityMainBinding
 import com.faysal.smsautomation.internet.ApiService
 import com.faysal.smsautomation.internet.NetworkBuilder
 import com.faysal.smsautomation.services.HandlerSMSWork
+import com.faysal.smsautomation.services.WorkMessageSender
 import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
+import com.faysal.smsautomation.util.Util
 import com.faysal.smsautomation.viewmodel.SMSViewModel
-import com.google.android.material.snackbar.Snackbar
 import dmax.dialog.SpotsDialog
 import kotlinx.coroutines.*
 import retrofit2.Response
@@ -70,6 +63,10 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var smsDao: PhoneSmsDao
 
+    lateinit var handler: Handler
+    var apiDelayed : Long = 10 * 1000 //1 second=1000 milisecond, 5*1000=5seconds
+    lateinit var runnable: Runnable
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,14 +84,14 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-
     private fun initDependency() {
         smsDao = SmsDatabase.getInstance(this).phoneSmsDao()
         apiService = NetworkBuilder.getApiService(applicationContext)
         api2Service = NetworkBuilder.getAnotherApiService()
         smsViewModel = ViewModelProviders.of(this).get(SMSViewModel::class.java)
         listAdapter = DeliveredMessageAdapter()
+
+        binding.tvNotice.setSelected(true)
 
     }
 
@@ -107,23 +104,128 @@ class MainActivity : AppCompatActivity() {
         setUpForSimInfoView()
         setupSmsServerOperation()
 
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val interval = SharedPref.getString(applicationContext, Constants.SHARED_INTERVAL)
+        if (!interval.isNullOrEmpty()){
+            apiDelayed = interval.toLong()
+        }
+        handler = Handler(Looper.getMainLooper())
+        handler.postDelayed(Runnable { //do your function;
+            val background_service = SharedPref.getBoolean(this, Constants.BACKGROUND_SERVVICE)
+            val verifyCode = Integer.valueOf(
+                SharedPref.getString(
+                    applicationContext,
+                    Constants.SHARED_VERIFICATION_CODE
+                )
+            )
+            if (background_service){
+                setupNetworkCallForOutgoing(verifyCode)
+
+                saveActivites(
+                    Activites(
+                        message = "Outgoing api triggered",
+                        timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                        status = true
+                    )
+                )
+
+            }
+
+            handler.postDelayed(runnable, apiDelayed.toLong())
+        }.also { runnable = it },
+            apiDelayed.toLong()
+        )
+    }
+
+
+
+    fun saveActivites(activites: Activites) {
+        val daos = SmsDatabase.getInstance(this).phoneSmsDao()
+        GlobalScope.launch {
+            try {
+                daos.saveDeliveredMessage(activites)
+            } catch (e: Exception) {
+                Log.d(TAG, "Failed  " + e.message)
+            }
+        }
+    }
+
+
+
+
+    private fun setupNetworkCallForOutgoing(verifyCode: Int) {
+          lifecycleScope.launchWhenStarted {
+            supervisorScope {
+                try {
+                    val outgoingResponse =
+                        async { apiService.getOutgoingMessages(verifyCode) }.await()
+                    val responseBody = outgoingResponse.body()
+                    if (responseBody?.size!! > 0) {
+
+                        responseBody.forEach {
+                            it.url.let {
+                                sendOutgoingSms(it)
+                            }
+
+                        }
+
+                    }
+                } catch (e: Exception) {
+                    saveActivites(
+                        Activites(
+                            message = "Error ! Something happened in outgoing api",
+                            timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                            status = true
+                        )
+                    )
+                }
+
+            }
+
+        }
+    }
+
+    private fun sendOutgoingSms(reciverInfo: String) {
+
+        val interval = SharedPref.getString(applicationContext, Constants.SHARED_INTERVAL).toLong()
+        val datas = Data.Builder().apply {
+            putString("messageUrl", reciverInfo)
+        }.build()
+
+
+        val workRequest: OneTimeWorkRequest =
+            OneTimeWorkRequest.Builder(WorkMessageSender::class.java)
+                .setInitialDelay(interval, TimeUnit.SECONDS)
+                .setInputData(datas)
+                .build()
+
+        val workManager: WorkManager = WorkManager.getInstance(applicationContext);
+        var work: WorkContinuation = workManager.beginUniqueWork(
+            JOB_GROUP_NAME,
+            ExistingWorkPolicy.APPEND,
+            workRequest
+        );
+        work.enqueue();
     }
 
     private fun setupSmsServerOperation() {
         smsDao.getAllSmsByLiveData().observe(this, Observer {
-           it.forEach{
-               sendSmsToBackgroundService(it)
-           }
+            it.forEach {
+                sendSmsToBackgroundService(it)
+            }
         })
     }
 
-
     private fun sendSmsToBackgroundService(sms: PhoneSms) {
 
-        val interval = SharedPref.getString(this,Constants.SHARED_INTERVAL).toLong()
+        val interval = SharedPref.getString(this, Constants.SHARED_INTERVAL).toLong()
 
 
-        val datas =  Data.Builder().apply {
+        val datas = Data.Builder().apply {
             putInt("smsid", sms.smsid)
             putString("simNo", sms.receiver_phone)
             putString("sender", sms.sender_phone)
@@ -132,14 +234,13 @@ class MainActivity : AppCompatActivity() {
         }.build()
 
 
-
-        val  workRequest : OneTimeWorkRequest = OneTimeWorkRequest.Builder(HandlerSMSWork::class.java)
-            .setInitialDelay(interval,TimeUnit.SECONDS)
+        val workRequest: OneTimeWorkRequest = OneTimeWorkRequest.Builder(HandlerSMSWork::class.java)
+            .setInitialDelay(interval, TimeUnit.SECONDS)
             .setInputData(datas)
             .build()
 
-        val workManager : WorkManager = WorkManager.getInstance(this);
-        var work : WorkContinuation = workManager.beginUniqueWork(
+        val workManager: WorkManager = WorkManager.getInstance(this);
+        var work: WorkContinuation = workManager.beginUniqueWork(
             JOB_GROUP_NAME,
             ExistingWorkPolicy.APPEND,
             workRequest
@@ -179,13 +280,13 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun setUpForSimInfoView(){
+    private fun setUpForSimInfoView() {
 
-        val sim1number = SharedPref.getString(this,Constants.SHARED_SIM_1_NUMBER)
-        val sim2number = SharedPref.getString(this,Constants.SHARED_SIM_2_NUMBER)
+        val sim1number = SharedPref.getString(this, Constants.SHARED_SIM_1_NUMBER)
+        val sim2number = SharedPref.getString(this, Constants.SHARED_SIM_2_NUMBER)
 
-        val sim1Switch = SharedPref.getBoolean(this,Constants.SHARED_SIM_1_ACTIVE)
-        val sim2Switch = SharedPref.getBoolean(this,Constants.SHARED_SIM_2_ACTIVE)
+        val sim1Switch = SharedPref.getBoolean(this, Constants.SHARED_SIM_1_ACTIVE)
+        val sim2Switch = SharedPref.getBoolean(this, Constants.SHARED_SIM_2_ACTIVE)
 
         sim1number?.let {
             binding.etSim1.setText(sim1number)
@@ -242,14 +343,13 @@ class MainActivity : AppCompatActivity() {
             startOperation()
 
 
-
         }
     }
 
     private fun startOperation() {
         val background_service = SharedPref.getBoolean(this, Constants.BACKGROUND_SERVVICE)
 
-        if (background_service){
+        if (background_service) {
             SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, false)
             Util.showAlertMessage(applicationContext, "Background Service has been stopped ")
             binding.btnStart.apply {
@@ -291,17 +391,17 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        if (sim1number.isNullOrEmpty()){
+        if (sim1number.isNullOrEmpty()) {
             binding.etSim1.error = "Enter sim 1 number"
             return
         }
 
-        if (sim2number.isNullOrEmpty()){
+        if (sim2number.isNullOrEmpty()) {
             binding.etSim2.error = "Enter sim 1 number"
             return
         }
 
-        if (!sim1switch && !sim2switch ){
+        if (!sim1switch && !sim2switch) {
             Util.showAlertMessage(applicationContext, "Please enable a sim before start ")
             return
         }
@@ -360,7 +460,7 @@ class MainActivity : AppCompatActivity() {
 
                 } catch (e: Throwable) {
                     withContext(Dispatchers.Main) {
-                        Util.showAlertMessage(applicationContext,e.message.toString())
+                        Util.showAlertMessage(applicationContext, e.message.toString())
                         dialog.dismiss()
                     }
                 }
@@ -442,8 +542,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-
     private fun showErrorMessageOKCancel(message: String) {
         AlertDialog.Builder(this@MainActivity)
             .setMessage(message)
@@ -455,14 +553,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        SharedPref.putBoolean(this,Constants.BACKGROUND_SERVVICE,false)
+        SharedPref.putBoolean(this, Constants.BACKGROUND_SERVVICE, false)
+        if (handler != null ){
+            handler.removeCallbacks(runnable) //stop handler when activity not visible
+        }
     }
 
     override fun onPause() {
         super.onPause()
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
-
 
 
 }
