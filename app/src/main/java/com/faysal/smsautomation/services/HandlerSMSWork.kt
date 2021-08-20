@@ -1,9 +1,9 @@
 package com.faysal.smsautomation.services
 
 import android.content.Context
-import android.os.SystemClock
 import android.util.Log
 import androidx.work.*
+import com.faysal.smsautomation.Models.SaveSms
 import com.faysal.smsautomation.database.Activites
 import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
@@ -13,32 +13,26 @@ import com.faysal.smsautomation.internet.NetworkBuilder
 import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 
-class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
-    context,
-    workerParams
-) {
+private const val TAG = "HandlerSMSWork"
+class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
-
-    private val JOB_GROUP_NAME: String = "outgoing_message_operation"
-     var smsDao: PhoneSmsDao
-     var apiService: ApiService
+    private var smsDao: PhoneSmsDao = SmsDatabase.getInstance(context).phoneSmsDao()
+    private var apiService: ApiService = NetworkBuilder.getApiService(applicationContext)
 
     private var result = Result.success()
 
-    init {
-        smsDao = SmsDatabase.getInstance(context).phoneSmsDao()
-        apiService = NetworkBuilder.getApiService(applicationContext)
-    }
-
 
     override fun doWork(): Result {
+        val bs = SharedPref.getBoolean(applicationContext, Constants.BACKGROUND_SERVICE)
+        if (!bs) { return Result.success() }
+
         val smsId = inputData.getInt("smsid", -1)
         val sender = inputData.getString("sender")
         val simNo = inputData.getString("simNo")
@@ -57,122 +51,49 @@ class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
             )
         )
 
+        apiService.sendSmsToServer(
+            service,
+            verifyCode,
+            sender,
+            simNo,
+            datetime,
+            smsBody
+        ).enqueue(object : Callback<SaveSms>{
+            override fun onResponse(call: Call<SaveSms>, response: Response<SaveSms>) {
+                if (response.isSuccessful){
+                    if (response.body()?.message == "Success") {
+                        deleteSms(phoneSms)
 
-        GlobalScope.launch {
-            supervisorScope {
-                try {
-                    val response = async {
-                        apiService.sendSmsToServer(
-                            service,
-                            verifyCode,
-                            sender,
-                            simNo,
-                            datetime,
-                            smsBody
-                        )
-                    }.await()
-
-                    val outgoingResponse =
-                        async { apiService.getOutgoingMessages(verifyCode) }.await()
-
-                    if (response.isSuccessful && outgoingResponse.isSuccessful) {
-
-                        if (response.body()?.message == "Success") {
-                            deleteSms(phoneSms)
-
-                            saveActivites(
-                                Activites(
-                                    message = smsBody + ".... Saved to server",
-                                    timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
-                                    status = true,
-
-                                    )
-                            )
-
-
-                            val responseBody = outgoingResponse.body()
-                            if (responseBody?.size!! > 0) {
-
-
-                                responseBody.forEach {
-                                    it.url.let {
-                                        sendOutgoingSms(it)
-                                    }
-
-                                }
-
-                            }
-                        }
-
-                        result = Result.success()
-
-
-                    } else {
-                        saveActivites(
+                        saveActivities(
                             Activites(
-                                message = smsBody + ".... Failed to Server",
+                                message = smsBody + ".... Saved to server",
                                 timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
-                                status = true,
-
-                                )
+                                status = true)
                         )
-
-                        result = Result.failure()
                     }
-
-
-                } catch (e: Throwable) {
-
-
-                    val smsNew = phoneSms.apply {
-                        processRunning = false
-                    }
-
-                    updateSms(smsNew)
-
-                    saveActivites(
-                        Activites(
-                            message = "Something wrong..." + e.message,
-                            timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
-                            status = true,
-
-                            )
-                    )
-
-                    result = Result.failure()
                 }
+                result = Result.success()
             }
-        }
 
+            override fun onFailure(call: Call<SaveSms>, t: Throwable) {
+                saveActivities(
+                    Activites(
+                        message = smsBody + ".... Failed to Server",
+                        timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()),
+                        status = true,
 
+                        )
+                )
+                result = Result.failure()
+            }
+
+        })
 
         return result
     }
 
-    private fun sendOutgoingSms(reciverInfo: String) {
 
-        val interval = SharedPref.getString(applicationContext, Constants.SHARED_INTERVAL).toLong()
-        val datas = Data.Builder().apply {
-            putString("messageUrl", reciverInfo)
-        }.build()
-
-
-        val workRequest: OneTimeWorkRequest = OneTimeWorkRequest.Builder(WorkMessageSender::class.java)
-            .setInitialDelay(interval, TimeUnit.SECONDS)
-            .setInputData(datas)
-            .build()
-
-        val workManager: WorkManager = WorkManager.getInstance(applicationContext);
-        var work: WorkContinuation = workManager.beginUniqueWork(
-            JOB_GROUP_NAME,
-            ExistingWorkPolicy.APPEND,
-            workRequest
-        );
-        work.enqueue();
-    }
-
-
-    fun saveActivites(sms: Activites) {
+   private fun saveActivities(sms: Activites) {
         GlobalScope.launch {
             try {
                 smsDao.saveDeliveredMessage(sms)
@@ -182,7 +103,7 @@ class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
         }
     }
 
-    fun deleteSms(sms: PhoneSms) {
+   private fun deleteSms(sms: PhoneSms) {
         GlobalScope.launch {
             try {
                 smsDao.delete(sms)
@@ -192,13 +113,13 @@ class HandlerSMSWork(context: Context, workerParams: WorkerParameters) : Worker(
         }
     }
 
-    fun updateSms(sms: PhoneSms) {
+   private fun updateSms(sms: PhoneSms) {
         GlobalScope.launch {
             try {
                 smsDao.update(sms)
-                Log.d(InternetService.TAG, "SMS update successfully")
+                Log.d(TAG, "SMS update successfully")
             } catch (e: Exception) {
-                Log.d(InternetService.TAG, "Failed to update data into room")
+                Log.d(TAG, "Failed to update data into room")
             }
         }
     }

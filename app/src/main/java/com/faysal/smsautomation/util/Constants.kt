@@ -2,7 +2,7 @@ package com.faysal.smsautomation.util
 
 object Constants {
 
-    var BACKGROUND_SERVVICE = "background_service"
+    var BACKGROUND_SERVICE = "background_service"
     var SHARED_DOMAIN_NAME = "shared_domain_name"
     var SHARED_VERIFICATION_CODE = "shared_verification_code"
     var SHARED_INTERVAL = "shared_interval"

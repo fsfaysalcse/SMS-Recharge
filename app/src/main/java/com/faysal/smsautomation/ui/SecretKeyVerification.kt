@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.faysal.smsautomation.Models.Verification
 import com.faysal.smsautomation.util.Util
 import com.faysal.smsautomation.databinding.ActivitySecretKeyVerificationBinding
 import com.faysal.smsautomation.internet.ApiService
@@ -11,10 +12,10 @@ import com.faysal.smsautomation.internet.NetworkBuilder
 import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
 import dmax.dialog.SpotsDialog
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.lang.Exception
 
 class SecretKeyVerification : AppCompatActivity() {
@@ -58,52 +59,50 @@ class SecretKeyVerification : AppCompatActivity() {
                     .build()
             dialog.show()
 
+            apiService.getVerificationCodeInfo(verificationCode).enqueue(object : Callback<Verification>{
+                override fun onResponse(
+                    call: Call<Verification>,
+                    response: Response<Verification>
+                ) {
+                    if (response.isSuccessful) {
 
-            GlobalScope.launch {
-                supervisorScope {
-                    try {
-                        val responseVerificationCode =
-                            async { apiService.getVerificationCodeInfo(verificationCode) }.await()
-                        if (responseVerificationCode.isSuccessful) {
-
-                            if (responseVerificationCode.body()?.status == 1) {
-                                SharedPref.putString(
-                                    applicationContext,
-                                    Constants.SHARED_VERIFICATION_CODE,
-                                    verificationCode
+                        if (response.body()?.status == 1) {
+                            SharedPref.putString(
+                                applicationContext,
+                                Constants.SHARED_VERIFICATION_CODE,
+                                verificationCode
+                            )
+                            SharedPref.putBoolean(
+                                applicationContext,
+                                Constants.IS_LOGED_IN,
+                                true
+                            )
+                            startActivity(
+                                Intent(
+                                    this@SecretKeyVerification,
+                                    MainActivity::class.java
                                 )
-                                SharedPref.putBoolean(
-                                    applicationContext,
-                                    Constants.IS_LOGED_IN,
-                                    true
-                                )
-                                startActivity(
-                                    Intent(
-                                        this@SecretKeyVerification,
-                                        MainActivity::class.java
-                                    )
-                                )
-                                finish()
-                            }else {
-                                Util.showAlertMessage(
-                                    applicationContext,
-                                    "Invalid Verification Code"
-                                )
-                            }
+                            )
+                            finish()
+                        }else {
+                            Util.showAlertMessage(
+                                applicationContext,
+                                "Invalid Verification Code"
+                            )}
                         }
-
-                        dialog.dismiss()
-
-                    } catch (e: Exception) {
-                        dialog.dismiss()
-                        Util.showAlertMessage(
-                            applicationContext,
-                            e.message.toString()
-                        )
-                    }
+                    dialog.dismiss()
                 }
 
-            }
+                override fun onFailure(call: Call<Verification>, t: Throwable) {
+                    dialog.dismiss()
+                    Util.showAlertMessage(
+                        applicationContext,
+                        t.message.toString()
+                    )
+                }
+
+            })
+
 
         }
     }

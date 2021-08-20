@@ -23,6 +23,22 @@ public class SharedPref {
 
     }
 
+
+    public static void putlong(Context context, String Key, long Value) {
+        sharedPreferences = context.getSharedPreferences("Cache", Context.MODE_PRIVATE);
+        editor = sharedPreferences.edit();
+        editor.putLong(Key, Value);
+        editor.commit();
+
+    }
+
+    public static long getlong(Context contextGetKey, String Key) {
+        sharedPreferences = contextGetKey.getSharedPreferences("Cache", Context.MODE_PRIVATE);
+        long Value = sharedPreferences.getLong(Key, 5);
+        return Value;
+
+    }
+
     public static void putBoolean(Context context, String Key, Boolean Value) {
         sharedPreferences = context.getSharedPreferences("Cache", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();

@@ -23,11 +23,7 @@ object NetworkBuilder {
         var domain = SharedPref.getString(context,Constants.SHARED_DOMAIN_NAME)
 //        val interval = SharedPref.getString(context, Constants.SHARED_INTERVAL).toLong()
 
-        if (domain.isNullOrEmpty()){
-            domain = "http://"+domain+"/"
-        }else{
-            domain = "http://server1.eflexi.xyz/"
-        }
+        domain = "http://"+domain+"/"
 
 
         val logging = HttpLoggingInterceptor()

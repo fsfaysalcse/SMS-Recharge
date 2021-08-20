@@ -26,9 +26,9 @@ interface ApiService {
 
 
     @GET("api-getdomain")
-    suspend fun getDomainInfo(
+    fun getDomainInfo(
         @Query("domain") domain : String
-    ) : Response<Domain>
+    ) : Call<Domain>
 
     @GET("api-getnotice")
     suspend fun getNotice(
@@ -36,12 +36,12 @@ interface ApiService {
     ) : Response<Notice>
 
     @GET("smsReceive")
-    suspend fun getVerificationCodeInfo(
+    fun getVerificationCodeInfo(
         @Query("verificationCode") verificationCode : String
-    ) : Response<Verification>
+    ) : Call<Verification>
 
     @GET
-    suspend fun getOutSms(@Url url: String) : Response<OutSms>
+    fun getOutSms(@Url url: String) : Call<OutSms>
 
 
 
@@ -51,23 +51,23 @@ interface ApiService {
 
 
     @GET("/smsApi/pendingSms")
-    suspend fun getOutgoingMessages(
+    fun getOutgoingMessages(
         @Query("verifycode") verifycode : Int
-    ) : Response<OutgoingMessages>
+    ) : Call<OutgoingMessages>
 
 
 
     // Send Sms to server
 
     @GET("smsApi/smsReceive")
-    suspend fun sendSmsToServer(
+    fun sendSmsToServer(
         @Query("service") service : Int,
         @Query("verifycode") verifycode : Int,
         @Query("sender") sender : String?,
         @Query("simNo") simNo : String?,
         @Query("datetime") datetime : String?,
         @Query("smsBody") smsBody : String?
-    ) : Response<SaveSms>
+    ) : Call<SaveSms>
 
 
 

@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.provider.Telephony
 import android.telephony.TelephonyManager
 import android.util.Log
-import androidx.work.*
 import com.faysal.smsautomation.database.Activites
 import com.faysal.smsautomation.database.PhoneSms
 import com.faysal.smsautomation.database.PhoneSmsDao
@@ -16,11 +15,9 @@ import com.faysal.smsautomation.database.SmsDatabase
 import com.faysal.smsautomation.util.Constants
 import com.faysal.smsautomation.util.SharedPref
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class SMSReciver : BroadcastReceiver() {
@@ -35,12 +32,13 @@ class SMSReciver : BroadcastReceiver() {
 
     @SuppressLint("MissingPermission")
     override fun onReceive(ct: Context, intent: Intent) {
+        
         context = ct
         database = SmsDatabase.getInstance(context)
         smsDao = database.phoneSmsDao()
 
 
-        val background_service = SharedPref.getBoolean(context, Constants.BACKGROUND_SERVVICE)
+        val background_service = SharedPref.getBoolean(context, Constants.BACKGROUND_SERVICE)
         if (!background_service) {
             return
         }
@@ -50,9 +48,9 @@ class SMSReciver : BroadcastReceiver() {
         val phoneNumber = telephonyManager!!.line1Number
         var inSIM = false
 
-        if (intent.getAction() != null) {
-            if (intent.getAction().equals(SMS_RECEIVED)) {
-                val bundle: Bundle = intent.getExtras()!!
+        if (intent.action != null) {
+            if (intent.action.equals(SMS_RECEIVED)) {
+                val bundle: Bundle = intent.extras!!
                 if (bundle != null) {
                     val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
                     for (message in messages) {
@@ -102,7 +100,7 @@ class SMSReciver : BroadcastReceiver() {
 
 
 
-    fun insertSms(sms: PhoneSms) {
+    private fun insertSms(sms: PhoneSms) {
         val daos = SmsDatabase.getInstance(context).phoneSmsDao()
         GlobalScope.launch {
             try {

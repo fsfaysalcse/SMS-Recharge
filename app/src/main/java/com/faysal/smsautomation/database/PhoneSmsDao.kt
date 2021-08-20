@@ -28,4 +28,7 @@ interface PhoneSmsDao {
 
     @Query("SELECT * FROM delivered_sms ORDER BY timestamp DESC LIMIT 20")
     fun getAllDelivered(): LiveData<List<Activites>>
+
+    @Query("DELETE FROM delivered_sms")
+    fun deleteEverything()
 }
